@@ -26,35 +26,79 @@ class PickupRequest(Document):
     def before_save(self):
         self.calculate_taxes_and_totals()
     
-    def set_missing_values(self):
-        """Set missing values"""
-        # Set tax category based on supplier or company
-        if not self.tax_category and self.get('name_of_supplier'):
-            supplier_tax_category = frappe.get_cached_value("Supplier", self.name_of_supplier, "tax_category")
-            if supplier_tax_category:
-                self.tax_category = supplier_tax_category
+    # def set_missing_values(self):
+    #     """Set missing values"""
+    #     # Set tax category based on supplier or company
+    #     if not self.tax_category and self.get('name_of_supplier'):
+    #         supplier_tax_category = frappe.get_cached_value("Supplier", self.name_of_supplier, "tax_category")
+    #         if supplier_tax_category:
+    #             self.tax_category = supplier_tax_category
         
+    #     if not self.tax_category and self.company:
+    #         company_tax_category = frappe.get_cached_value("Company", self.company, "tax_category")
+    #         if company_tax_category:
+    #             self.tax_category = company_tax_category
+        
+    #     # Set default currency
+    #     if not self.get('currency'):
+    #         self.currency = frappe.get_cached_value("Company", self.company, "default_currency") or "INR"
+        
+    #     # Set default conversion rate - check multiple possible field names
+    #     if not self.get('conversion_rate'):
+    #         # Try to get from purchase order details first
+    #         if self.get("purchase_order_details"):
+    #             for item in self.purchase_order_details:
+    #                 if item.get("currency_rate"):
+    #                     self.conversion_rate = flt(item.currency_rate, 1.0)
+    #                     break
+            
+    #         # If still not set, default to 1.0
+    #         if not self.get('conversion_rate'):
+    #             self.conversion_rate = 1.0
+
+
+    def set_missing_values(self):
+        # ------------------------
+        # Set tax category from supplier (child table)
+        # ------------------------
+        if not self.tax_category and self.get("name_of_supplier"):
+            for supplier_row in self.name_of_supplier:
+                supplier_name = supplier_row.supplier  # Link field
+                if supplier_name:
+                    supplier_tax_category = frappe.get_cached_value("Supplier", supplier_name, "tax_category")
+                    if supplier_tax_category:
+                        self.tax_category = supplier_tax_category
+                        break  # Stop at first valid tax category
+
+        # ------------------------
+        # Set tax category from company if still missing
+        # ------------------------
         if not self.tax_category and self.company:
             company_tax_category = frappe.get_cached_value("Company", self.company, "tax_category")
             if company_tax_category:
                 self.tax_category = company_tax_category
-        
+
+        # ------------------------
         # Set default currency
-        if not self.get('currency'):
+        # ------------------------
+        if not self.get("currency"):
             self.currency = frappe.get_cached_value("Company", self.company, "default_currency") or "INR"
-        
-        # Set default conversion rate - check multiple possible field names
-        if not self.get('conversion_rate'):
+
+        # ------------------------
+        # Set default conversion rate
+        # ------------------------
+        if not self.get("conversion_rate"):
             # Try to get from purchase order details first
             if self.get("purchase_order_details"):
                 for item in self.purchase_order_details:
                     if item.get("currency_rate"):
                         self.conversion_rate = flt(item.currency_rate, 1.0)
                         break
-            
-            # If still not set, default to 1.0
-            if not self.get('conversion_rate'):
+
+            # Fallback to 1.0 if still missing
+            if not self.get("conversion_rate"):
                 self.conversion_rate = 1.0
+
 
     def calculate_totals(self):
         """Calculate basic totals from items"""
@@ -356,7 +400,7 @@ def get_suppliers_dialog_data(pickup_request):
     ]
 
 # @frappe.whitelist()
-# def create_rfq_from_pickup_request(pickup_request, suppliers, email_template):
+# def (piccreate_rfq_from_pickup_requestkup_request, suppliers, email_template):
 #     if not suppliers:
 #         frappe.throw("Please add at least one supplier.")
     
