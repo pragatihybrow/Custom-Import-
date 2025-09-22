@@ -1,0 +1,293 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2025-09-18 13:08:12.717780",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_m9rs",
+  "naming_series",
+  "po_no",
+  "boe_date",
+  "column_break_gvpd",
+  "pickup_request",
+  "currency",
+  "column_break_tqax",
+  "vendor",
+  "exchange_rate",
+  "column_break_nsct",
+  "section_break_kvfb",
+  "boe_entries",
+  "section_break_gfaf",
+  "total_inr_value",
+  "igst_amount",
+  "job_number",
+  "column_break_wuls",
+  "accessible_value",
+  "sws_amount",
+  "approve_remark",
+  "column_break_zycy",
+  "h_cess_amount",
+  "total_rode_tape",
+  "payment_type",
+  "column_break_jxak",
+  "bcd_amount",
+  "total_duty",
+  "section_break_dzvy",
+  "penalty",
+  "column_break_bryi",
+  "penalty_vendor",
+  "column_break_bnpv",
+  "penalty_reason",
+  "attach_document_tab",
+  "attach_document",
+  "status",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_m9rs",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "BOE-.###"
+  },
+  {
+   "fieldname": "po_no",
+   "fieldtype": "Link",
+   "label": "Po No",
+   "options": "Purchase Order"
+  },
+  {
+   "fieldname": "boe_date",
+   "fieldtype": "Date",
+   "label": "BOE Date"
+  },
+  {
+   "fieldname": "column_break_gvpd",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "pre_alert.pickup_request",
+   "fieldname": "pickup_request",
+   "fieldtype": "Link",
+   "label": "Pickup Request",
+   "options": "Pickup Request"
+  },
+  {
+   "fieldname": "currency",
+   "fieldtype": "Link",
+   "label": "Currency",
+   "options": "Currency"
+  },
+  {
+   "fieldname": "column_break_tqax",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "pre_alert.vendor",
+   "fieldname": "vendor",
+   "fieldtype": "Link",
+   "label": "Vendor",
+   "options": "Supplier"
+  },
+  {
+   "fieldname": "exchange_rate",
+   "fieldtype": "Currency",
+   "label": "Exchange Rate"
+  },
+  {
+   "fieldname": "column_break_nsct",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_kvfb",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "boe_entries",
+   "fieldtype": "Table",
+   "label": "BOE Entries",
+   "options": "BOE Entries"
+  },
+  {
+   "fieldname": "section_break_gfaf",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "total_inr_value",
+   "fieldtype": "Currency",
+   "label": "Total Inr Value",
+   "options": "Company:company:default_currency"
+  },
+  {
+   "fieldname": "igst_amount",
+   "fieldtype": "Currency",
+   "label": "IGST Amount",
+   "options": "Company:company:default_currency"
+  },
+  {
+   "fieldname": "job_number",
+   "fieldtype": "Data",
+   "label": "Job Number"
+  },
+  {
+   "fieldname": "column_break_wuls",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "accessible_value",
+   "fieldtype": "Currency",
+   "label": "Accessible Value",
+   "options": "Company:company:default_currency"
+  },
+  {
+   "fieldname": "sws_amount",
+   "fieldtype": "Currency",
+   "label": "SWS Amount",
+   "options": "Company:company:default_currency"
+  },
+  {
+   "fieldname": "approve_remark",
+   "fieldtype": "Data",
+   "label": "Approve Remark"
+  },
+  {
+   "fieldname": "column_break_zycy",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "h_cess_amount",
+   "fieldtype": "Currency",
+   "label": "H. Cess Amount",
+   "options": "Company:company:default_currency"
+  },
+  {
+   "fieldname": "total_rode_tape",
+   "fieldtype": "Currency",
+   "label": "Total Rode tape",
+   "options": "Company:company:default_currency"
+  },
+  {
+   "fieldname": "payment_type",
+   "fieldtype": "Select",
+   "label": "Payment Type",
+   "options": "\nDeferred Payment"
+  },
+  {
+   "fieldname": "column_break_jxak",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "bcd_amount",
+   "fieldtype": "Currency",
+   "label": "BCD Amount",
+   "options": "Company:company:default_currency"
+  },
+  {
+   "fieldname": "total_duty",
+   "fieldtype": "Currency",
+   "label": "Total Duty",
+   "options": "Company:company:default_currency"
+  },
+  {
+   "fieldname": "section_break_dzvy",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "penalty",
+   "fieldtype": "Float",
+   "label": "Penalty",
+   "options": "Company:company:default_currency"
+  },
+  {
+   "fieldname": "column_break_bryi",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "penalty_vendor",
+   "fieldtype": "Link",
+   "label": "Penalty Vendor",
+   "options": "Supplier"
+  },
+  {
+   "fieldname": "column_break_bnpv",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "penalty_reason",
+   "fieldtype": "Data",
+   "label": "Penalty Reason"
+  },
+  {
+   "fieldname": "attach_document_tab",
+   "fieldtype": "Tab Break",
+   "label": "Attach Document"
+  },
+  {
+   "fieldname": "attach_document",
+   "fieldtype": "Table",
+   "label": "Attach Document",
+   "options": "Attach Document"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "\nDraft\nSubmitted\nTo Bill"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "BOE",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "BOE",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2025-09-18 13:09:52.820550",
+ "modified_by": "pragati@gmail.com",
+ "module": "Import",
+ "name": "BOE",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "pragati@gmail.com",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

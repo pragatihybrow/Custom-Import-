@@ -1,0 +1,62 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-09-18 12:16:41.096541",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "script_no",
+  "amount",
+  "column_break_irjg",
+  "script_date",
+  "used_rodtep"
+ ],
+ "fields": [
+  {
+   "fieldname": "script_no",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Script no",
+   "options": "Rodtep Utilization"
+  },
+  {
+   "fetch_from": "script_no.amount",
+   "fieldname": "amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Amount"
+  },
+  {
+   "fieldname": "column_break_irjg",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "script_no.script_date",
+   "fieldname": "script_date",
+   "fieldtype": "Date",
+   "in_standard_filter": 1,
+   "label": "Script Date"
+  },
+  {
+   "fieldname": "used_rodtep",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Used Rodtep"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2025-09-18 12:16:41.096541",
+ "modified_by": "pragati@gmail.com",
+ "module": "Import",
+ "name": "Rodtape Details",
+ "owner": "pragati@gmail.com",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

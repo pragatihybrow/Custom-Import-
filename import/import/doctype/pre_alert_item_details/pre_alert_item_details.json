@@ -1,0 +1,266 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-09-18 12:12:03.762856",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "po_no",
+  "description",
+  "amount",
+  "insurance_amount",
+  "category",
+  "po_qty",
+  "column_break_jokj",
+  "item_code",
+  "quantity",
+  "total_inr_value",
+  "freight_amount",
+  "total_amount",
+  "igcr",
+  "column_break_onyc",
+  "item_name",
+  "item_price",
+  "misc_charge_amt",
+  "total_duty",
+  "section_break_nntd",
+  "bcd_",
+  "hcs_",
+  "igst_",
+  "column_break_rqpl",
+  "bcd_amount",
+  "hcs_amount",
+  "igst_amount",
+  "column_break_toni",
+  "rodtep_utilization",
+  "swl_",
+  "final_total_duty",
+  "column_break_kyyf",
+  "total_duty_forgone",
+  "swl_amount"
+ ],
+ "fields": [
+  {
+   "fieldname": "po_no",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Purchase Order Number",
+   "options": "Purchase Order"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Description"
+  },
+  {
+   "fieldname": "amount",
+   "fieldtype": "Currency",
+   "label": "Amount",
+   "options": "Company:company:default_currency",
+   "precision": "2"
+  },
+  {
+   "fieldname": "insurance_amount",
+   "fieldtype": "Currency",
+   "label": "Insurance Amount",
+   "options": "Company:company:default_currency",
+   "precision": "2"
+  },
+  {
+   "fieldname": "category",
+   "fieldtype": "Link",
+   "label": "Category",
+   "options": "Application Bond Duty Category"
+  },
+  {
+   "fieldname": "po_qty",
+   "fieldtype": "Float",
+   "label": "Po Qty"
+  },
+  {
+   "fieldname": "column_break_jokj",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "item_code",
+   "fieldtype": "Link",
+   "label": "Item Code",
+   "options": "Item"
+  },
+  {
+   "fieldname": "quantity",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Quantity"
+  },
+  {
+   "fieldname": "total_inr_value",
+   "fieldtype": "Currency",
+   "label": "Total INR Value",
+   "options": "Company:company:default_currency",
+   "precision": "2"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "freight_amount",
+   "fieldtype": "Currency",
+   "label": "Freight Amount",
+   "options": "Company:company:default_currency",
+   "precision": "2"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "total_amount",
+   "fieldtype": "Currency",
+   "label": "Total Amount",
+   "options": "Company:company:default_currency",
+   "precision": "2"
+  },
+  {
+   "default": "0",
+   "fieldname": "igcr",
+   "fieldtype": "Check",
+   "label": "IGCR"
+  },
+  {
+   "fieldname": "column_break_onyc",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "item_code.item_name",
+   "fieldname": "item_name",
+   "fieldtype": "Data",
+   "label": "Item name"
+  },
+  {
+   "fieldname": "item_price",
+   "fieldtype": "Currency",
+   "label": "Item Price",
+   "options": "Company:company:default_currency",
+   "precision": "2"
+  },
+  {
+   "fieldname": "misc_charge_amt",
+   "fieldtype": "Currency",
+   "label": "Misc. Charge Amt.",
+   "options": "Company:company:default_currency",
+   "precision": "2"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "total_duty",
+   "fieldtype": "Currency",
+   "label": "Total Duty",
+   "options": "Company:company:default_currency",
+   "precision": "2"
+  },
+  {
+   "fieldname": "section_break_nntd",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fetch_from": "item_code.custom_bcd_",
+   "fetch_if_empty": 1,
+   "fieldname": "bcd_",
+   "fieldtype": "Percent",
+   "label": "BCD (%)"
+  },
+  {
+   "fetch_from": "item_code.custom_hcs_",
+   "fieldname": "hcs_",
+   "fieldtype": "Percent",
+   "label": "HCS (%)"
+  },
+  {
+   "fetch_from": "item_code.custom_igst_",
+   "fetch_if_empty": 1,
+   "fieldname": "igst_",
+   "fieldtype": "Percent",
+   "label": "IGST (%)"
+  },
+  {
+   "fieldname": "column_break_rqpl",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "bcd_amount",
+   "fieldtype": "Float",
+   "label": "BCD Amount",
+   "precision": "2"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "hcs_amount",
+   "fieldtype": "Float",
+   "label": "HCS Amount",
+   "precision": "2"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "igst_amount",
+   "fieldtype": "Float",
+   "label": "IGST Amount",
+   "precision": "2"
+  },
+  {
+   "fieldname": "column_break_toni",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "rodtep_utilization",
+   "fieldtype": "Currency",
+   "label": "Rodtep Utilization",
+   "precision": "2"
+  },
+  {
+   "fetch_from": "item_code.custom_sws_",
+   "fetch_if_empty": 1,
+   "fieldname": "swl_",
+   "fieldtype": "Percent",
+   "label": "SWS (%)",
+   "precision": "2"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "final_total_duty",
+   "fieldtype": "Currency",
+   "label": "Final Total Duty",
+   "precision": "2"
+  },
+  {
+   "fieldname": "column_break_kyyf",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "total_duty_forgone",
+   "fieldtype": "Currency",
+   "label": "Total Duty Forgone",
+   "precision": "2"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "swl_amount",
+   "fieldtype": "Float",
+   "label": "SWS Amount",
+   "precision": "2"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2025-09-18 12:14:39.860654",
+ "modified_by": "pragati@gmail.com",
+ "module": "Import",
+ "name": "Pre-Alert Item Details",
+ "owner": "pragati@gmail.com",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

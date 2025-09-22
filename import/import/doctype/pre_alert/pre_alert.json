@@ -1,0 +1,435 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2025-09-18 13:01:49.721953",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "pickup_request",
+  "naming_series",
+  "column_break_nvmi",
+  "rfq_number",
+  "column_break_lbfz",
+  "vendor",
+  "cha_edited_once",
+  "section_break_bxxy",
+  "currency",
+  "column_break_pbce",
+  "exch_rate",
+  "column_break_mmwy",
+  "total_doc_val",
+  "column_break_rrce",
+  "total_inr_val",
+  "section_break_ecyv",
+  "cha",
+  "igcr",
+  "column_break_yudr",
+  "rem_rodtep",
+  "column_break_rchd",
+  "payment_type",
+  "column_break_gexf",
+  "tot_rodt_ut",
+  "section_break_thln",
+  "freight_amt",
+  "insurance",
+  "column_break_ltyk",
+  "ex_works",
+  "insurance_amount",
+  "column_break_dlwj",
+  "other_charges",
+  "accessible_val",
+  "section_break_ylqh",
+  "item_details",
+  "section_break_smqx",
+  "bcd_amount",
+  "igst_amount",
+  "column_break_ebhg",
+  "h_cess_amount",
+  "total_freight",
+  "column_break_oxxl",
+  "sws_amount",
+  "total_duty",
+  "section_break_iiix",
+  "remarks",
+  "rodtep_tab",
+  "rodtep_details",
+  "connections_tab",
+  "comments_tab",
+  "status",
+  "custom_notes_html",
+  "crm_note",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "allow_on_submit": 1,
+   "fieldname": "pickup_request",
+   "fieldtype": "Link",
+   "label": "Pickup Request",
+   "options": "Pickup Request",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Pre Alert",
+   "options": "PRE-ALT-.###",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_nvmi",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "rfq_number",
+   "fieldtype": "Link",
+   "label": "RFQ Number",
+   "options": "Request for Quotation",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_lbfz",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "vendor",
+   "fieldtype": "Link",
+   "label": "Vendor",
+   "options": "Supplier",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
+   "fieldname": "cha_edited_once",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "label": "Cha Edited Once"
+  },
+  {
+   "fieldname": "section_break_bxxy",
+   "fieldtype": "Section Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "currency",
+   "fieldtype": "Link",
+   "label": "Currency",
+   "options": "Currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_pbce",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "exch_rate",
+   "fieldtype": "Currency",
+   "label": "Exch. Rate",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_mmwy",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "fetch_from": "pickup_request.grand_total",
+   "fieldname": "total_doc_val",
+   "fieldtype": "Currency",
+   "label": "Total Doc. Val",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_rrce",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "fetch_from": "pickup_request.base_grand_total",
+   "fieldname": "total_inr_val",
+   "fieldtype": "Currency",
+   "label": "Total INR Val",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_ecyv",
+   "fieldtype": "Section Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "cha",
+   "fieldtype": "Link",
+   "label": "CHA",
+   "options": "Supplier"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "tot_rodt_ut",
+   "fieldtype": "Int",
+   "label": "Tot. Rodt. Ut",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_yudr",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "rem_rodtep",
+   "fieldtype": "Float",
+   "label": "Rem. Rodtep"
+  },
+  {
+   "fieldname": "column_break_rchd",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "payment_type",
+   "fieldtype": "Select",
+   "label": "Payment Type",
+   "options": "\nDEFFERED PAYMENT\nTRANSATIONAL PAYMENT"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
+   "fieldname": "igcr",
+   "fieldtype": "Check",
+   "label": "IGCR"
+  },
+  {
+   "fieldname": "column_break_gexf",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_thln",
+   "fieldtype": "Section Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "freight_amt",
+   "fieldtype": "Currency",
+   "label": "Freight Amount",
+   "options": "Company:company:default_currency"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "insurance",
+   "fieldtype": "Percent",
+   "label": "Insurance (%)"
+  },
+  {
+   "fieldname": "column_break_ltyk",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "ex_works",
+   "fieldtype": "Currency",
+   "label": "Ex Works",
+   "options": "Company:company:default_currency"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "insurance_amount",
+   "fieldtype": "Currency",
+   "label": "Insurance Amount",
+   "options": "Company:company:default_currency"
+  },
+  {
+   "fieldname": "column_break_dlwj",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "other_charges",
+   "fieldtype": "Currency",
+   "label": "Other Charges",
+   "options": "Company:company:default_currency"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "accessible_val",
+   "fieldtype": "Currency",
+   "label": "Accessible Val",
+   "options": "Company:company:default_currency"
+  },
+  {
+   "fieldname": "section_break_ylqh",
+   "fieldtype": "Section Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "item_details",
+   "fieldtype": "Table",
+   "label": "Item Details",
+   "options": "Pre-Alert Item Details"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "section_break_smqx",
+   "fieldtype": "Section Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "bcd_amount",
+   "fieldtype": "Currency",
+   "label": "Total BCD Amount",
+   "options": "Company:company:default_currency"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "igst_amount",
+   "fieldtype": "Currency",
+   "label": "Total IGST Amount",
+   "options": "Company:company:default_currency"
+  },
+  {
+   "fieldname": "column_break_ebhg",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "h_cess_amount",
+   "fieldtype": "Currency",
+   "label": "Total HCS Amount",
+   "options": "Company:company:default_currency"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "total_freight",
+   "fieldtype": "Currency",
+   "label": "Total Freight",
+   "options": "Company:company:default_currency"
+  },
+  {
+   "fieldname": "column_break_oxxl",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "sws_amount",
+   "fieldtype": "Currency",
+   "label": "Total SWS Amount",
+   "options": "Company:company:default_currency"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "total_duty",
+   "fieldtype": "Currency",
+   "label": "Total Duty",
+   "options": "Company:company:default_currency"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "section_break_iiix",
+   "fieldtype": "Section Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "label": "Remarks"
+  },
+  {
+   "fieldname": "rodtep_tab",
+   "fieldtype": "Tab Break",
+   "label": "Rodtep"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "rodtep_details",
+   "fieldtype": "Table",
+   "label": "Rodtep Details",
+   "options": "Rodtape Details"
+  },
+  {
+   "fieldname": "connections_tab",
+   "fieldtype": "Tab Break",
+   "label": "Connections"
+  },
+  {
+   "fieldname": "comments_tab",
+   "fieldtype": "Tab Break",
+   "hidden": 1,
+   "label": "Comments"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Draft\nPurchase HOD Approval Pending\nRejected by Purchase HOD\nPurchase Account Manager Approval Pending\nRejected by Purchase Account Manager\nApproved\nRejected"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "custom_notes_html",
+   "fieldtype": "HTML",
+   "label": "Notes HTML"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "crm_note",
+   "fieldtype": "Table",
+   "hidden": 1,
+   "label": "CRM Note",
+   "options": "CRM Note"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Pre Alert",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Pre Alert",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2025-09-18 13:05:45.322745",
+ "modified_by": "pragati@gmail.com",
+ "module": "Import",
+ "name": "Pre Alert",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "pragati@gmail.com",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

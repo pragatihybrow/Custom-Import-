@@ -1,0 +1,102 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-09-18 13:07:04.117084",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "po_number",
+  "total_inr_value",
+  "total_rodtep",
+  "total_duty",
+  "total_h_cess",
+  "column_break_iciv",
+  "total_qty",
+  "total_bcd",
+  "total_gst",
+  "total_sws"
+ ],
+ "fields": [
+  {
+   "fieldname": "po_number",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Pre Alert",
+   "options": "Pre Alert"
+  },
+  {
+   "fetch_from": "po_number.total_inr_val",
+   "fieldname": "total_inr_value",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Total INR Value"
+  },
+  {
+   "fetch_from": "po_number.tot_rodt_ut",
+   "fieldname": "total_rodtep",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Total Rodtep"
+  },
+  {
+   "fetch_from": "po_number.total_duty",
+   "fieldname": "total_duty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Total Duty"
+  },
+  {
+   "fetch_from": "po_number.h_cess_amount",
+   "fieldname": "total_h_cess",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Total H. Cess"
+  },
+  {
+   "fieldname": "column_break_iciv",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_if_empty": 1,
+   "fieldname": "total_qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Total Qty"
+  },
+  {
+   "fetch_from": "po_number.bcd_amount",
+   "fieldname": "total_bcd",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Total BCD"
+  },
+  {
+   "fetch_from": "po_number.igst_amount",
+   "fieldname": "total_gst",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Total GST"
+  },
+  {
+   "fetch_from": "po_number.sws_amount",
+   "fieldname": "total_sws",
+   "fieldtype": "Float",
+   "label": "Total SWS"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2025-09-18 13:08:09.355642",
+ "modified_by": "pragati@gmail.com",
+ "module": "Import",
+ "name": "BOE Entries",
+ "owner": "pragati@gmail.com",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

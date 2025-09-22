@@ -1,0 +1,42 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-09-18 12:15:09.471770",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "description",
+  "attach_file"
+ ],
+ "fields": [
+  {
+   "fieldname": "description",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Description",
+   "options": "\nChecklist\nCommercial Invoice\nAWB\nPO\nBOE"
+  },
+  {
+   "fieldname": "attach_file",
+   "fieldtype": "Attach",
+   "in_list_view": 1,
+   "label": "Attach File",
+   "mandatory_depends_on": "eval:doc.description"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2025-09-18 12:15:09.471770",
+ "modified_by": "pragati@gmail.com",
+ "module": "Import",
+ "name": "Attach Document",
+ "owner": "pragati@gmail.com",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

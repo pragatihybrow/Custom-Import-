@@ -1,0 +1,417 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2025-09-18 12:22:32.795639",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_xbiq",
+  "amended_from",
+  "name_of_supplier",
+  "supplier_address",
+  "naming_series",
+  "supplier_address_display",
+  "column_break_amcb",
+  "po_no",
+  "po_date",
+  "comapny_address",
+  "supplier_pickup_address",
+  "pickup_address_display",
+  "column_break_hfen",
+  "company",
+  "currency",
+  "conversion_rate",
+  "po_updated",
+  "section_break_trfw",
+  "no_of_package",
+  "pickup_date_by",
+  "incoterm",
+  "dimensions",
+  "column_break_gpob",
+  "type_of_cargo",
+  "type_of_shipments",
+  "shipment_value",
+  "gross_weight",
+  "column_break_evrh",
+  "mode_of_shipment",
+  "port_of_loading_pol",
+  "port_of_destination_pod",
+  "column_break_ccne",
+  "country_origin",
+  "pol_code",
+  "pod_code",
+  "section_break_apxy",
+  "purchase_order_list",
+  "purchase_order_details",
+  "section_break_kkrk",
+  "total_quantity",
+  "base_total",
+  "tax_category",
+  "column_break_zqxl",
+  "total_picked_quantity",
+  "total",
+  "taxes_and_charges",
+  "section_break_diog",
+  "purchase_taxes_and_charges",
+  "section_break_kgjv",
+  "base_taxes_and_charges_added",
+  "base_grand_total",
+  "total_amount",
+  "column_break_qlzm",
+  "taxes_and_charges_added",
+  "grand_total",
+  "section_break_zgpb",
+  "remark"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_xbiq",
+   "fieldtype": "Section Break",
+   "label": "Supplier Information"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Pickup Request",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "column_break_amcb",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "supplier_pickup_address",
+   "fieldtype": "Link",
+   "label": "Supplier Pickup Address",
+   "options": "Address",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_hfen",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "po_no",
+   "fieldtype": "Table MultiSelect",
+   "label": "PO No",
+   "options": "PO CT"
+  },
+  {
+   "fieldname": "pickup_address_display",
+   "fieldtype": "Small Text",
+   "label": "Pickup Address Display",
+   "read_only": 1
+  },
+  {
+   "fieldname": "po_date",
+   "fieldtype": "Date",
+   "label": "PO Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "currency",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Currency",
+   "options": "Currency"
+  },
+  {
+   "fieldname": "conversion_rate",
+   "fieldtype": "Float",
+   "hidden": 1,
+   "label": "Exchange Rate"
+  },
+  {
+   "default": "0",
+   "fieldname": "po_updated",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "label": "Po Updated"
+  },
+  {
+   "fieldname": "supplier_address",
+   "fieldtype": "Link",
+   "label": "Supplier Address",
+   "options": "Address",
+   "read_only": 1
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "PR-.###"
+  },
+  {
+   "fieldname": "supplier_address_display",
+   "fieldtype": "Small Text",
+   "label": "Supplier Address Display",
+   "read_only": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company"
+  },
+  {
+   "fieldname": "section_break_trfw",
+   "fieldtype": "Section Break",
+   "label": "Goods Information"
+  },
+  {
+   "fieldname": "no_of_package",
+   "fieldtype": "Int",
+   "label": "No. Of Package"
+  },
+  {
+   "fieldname": "pickup_date_by",
+   "fieldtype": "Date",
+   "label": "Pickup Date By"
+  },
+  {
+   "fieldname": "column_break_gpob",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_evrh",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_ccne",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "incoterm",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Incoterm",
+   "options": "Incoterm",
+   "reqd": 1
+  },
+  {
+   "fieldname": "dimensions",
+   "fieldtype": "Data",
+   "label": "Dimensions"
+  },
+  {
+   "fieldname": "type_of_cargo",
+   "fieldtype": "Link",
+   "label": "Type Of Cargo",
+   "options": "Type Of Cargo"
+  },
+  {
+   "fieldname": "type_of_shipments",
+   "fieldtype": "Link",
+   "label": "Type Of Shipments",
+   "options": "Type Of Shipments"
+  },
+  {
+   "fieldname": "shipment_value",
+   "fieldtype": "Float",
+   "label": "Shipment Value"
+  },
+  {
+   "fieldname": "gross_weight",
+   "fieldtype": "Float",
+   "label": "Gross Weight"
+  },
+  {
+   "fieldname": "mode_of_shipment",
+   "fieldtype": "Link",
+   "label": "Mode Of Shipment",
+   "options": "Mode of Shipment"
+  },
+  {
+   "fieldname": "port_of_loading_pol",
+   "fieldtype": "Link",
+   "label": "Port of Loading (POL)",
+   "options": "Port"
+  },
+  {
+   "fieldname": "port_of_destination_pod",
+   "fieldtype": "Link",
+   "label": "Port of Destination (POD)",
+   "options": "Port"
+  },
+  {
+   "fieldname": "country_origin",
+   "fieldtype": "Link",
+   "label": "Country Origin",
+   "options": "Country"
+  },
+  {
+   "fetch_from": "port_of_loading_pol.port_name",
+   "fieldname": "pol_code",
+   "fieldtype": "Data",
+   "label": "POL Code "
+  },
+  {
+   "fetch_from": "port_of_destination_pod.port_name",
+   "fieldname": "pod_code",
+   "fieldtype": "Data",
+   "label": "POD Code"
+  },
+  {
+   "fieldname": "section_break_apxy",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "purchase_order_details",
+   "fieldtype": "Table",
+   "label": "Item Description",
+   "options": "Purchase Order Details"
+  },
+  {
+   "fieldname": "section_break_kkrk",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "total_quantity",
+   "fieldtype": "Int",
+   "label": "Total Quantity"
+  },
+  {
+   "fieldname": "column_break_zqxl",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_picked_quantity",
+   "fieldtype": "Int",
+   "label": "Total Picked Quantity"
+  },
+  {
+   "fieldname": "base_total",
+   "fieldtype": "Currency",
+   "label": "Total (Company Currency)",
+   "options": "Company:company:default_currency"
+  },
+  {
+   "fieldname": "total",
+   "fieldtype": "Currency",
+   "label": "Total ",
+   "options": "Company:company:default_currency"
+  },
+  {
+   "fieldname": "tax_category",
+   "fieldtype": "Link",
+   "label": "Tax Category",
+   "options": "Tax Category"
+  },
+  {
+   "fieldname": "taxes_and_charges",
+   "fieldtype": "Link",
+   "label": "Purchase Taxes and Charges Template",
+   "options": "Purchase Taxes and Charges Template"
+  },
+  {
+   "fieldname": "section_break_diog",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "purchase_taxes_and_charges",
+   "fieldtype": "Table",
+   "label": "Purchase Taxes and Charges",
+   "options": "Purchase Taxes and Charges"
+  },
+  {
+   "fieldname": "section_break_kgjv",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "base_taxes_and_charges_added",
+   "fieldtype": "Currency",
+   "label": "Taxes and Charges Added (Company Currency)",
+   "options": "Company:company:default_currency"
+  },
+  {
+   "fieldname": "base_grand_total",
+   "fieldtype": "Currency",
+   "label": "Grand Total (Company Currency)",
+   "options": "Company:company:default_currency"
+  },
+  {
+   "fieldname": "column_break_qlzm",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_amount",
+   "fieldtype": "Currency",
+   "hidden": 1,
+   "label": "Total Amount",
+   "options": "Company:company:default_currency"
+  },
+  {
+   "fieldname": "taxes_and_charges_added",
+   "fieldtype": "Currency",
+   "label": "Taxes and Charges Added",
+   "options": "currency"
+  },
+  {
+   "fieldname": "grand_total",
+   "fieldtype": "Currency",
+   "label": "Grand Total",
+   "options": "currency"
+  },
+  {
+   "fieldname": "section_break_zgpb",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "remark",
+   "fieldtype": "Data",
+   "label": "Remark"
+  },
+  {
+   "fieldname": "comapny_address",
+   "fieldtype": "Small Text",
+   "label": "Comapny Address",
+   "read_only": 1
+  },
+  {
+   "fieldname": "name_of_supplier",
+   "fieldtype": "Table MultiSelect",
+   "label": "Supplier",
+   "options": "Supplier CT"
+  },
+  {
+   "fieldname": "purchase_order_list",
+   "fieldtype": "Table",
+   "label": "Purchase Order Details",
+   "options": "Purchase Order List"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2025-09-19 10:51:12.564987",
+ "modified_by": "Administrator",
+ "module": "Import",
+ "name": "Pickup Request",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "pragati@gmail.com",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

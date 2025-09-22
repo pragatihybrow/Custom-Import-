@@ -1,0 +1,52 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-09-18 12:21:20.908168",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "form_location",
+  "to_location",
+  "column_break_hxal",
+  "exempted_date"
+ ],
+ "fields": [
+  {
+   "fieldname": "form_location",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Form Location",
+   "options": "Location"
+  },
+  {
+   "fieldname": "to_location",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "To Location",
+   "options": "Location"
+  },
+  {
+   "fieldname": "column_break_hxal",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "exempted_date",
+   "fieldtype": "Date",
+   "label": "Exempted Date"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2025-09-18 12:21:20.908168",
+ "modified_by": "pragati@gmail.com",
+ "module": "Import",
+ "name": "Transport Stops",
+ "owner": "pragati@gmail.com",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

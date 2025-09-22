@@ -242,3 +242,42 @@ app_license = "mit"
 # 	"Logging DocType Name": 30  # days to retain logs
 # }
 
+
+
+doctype_js = {
+        "Material Request": "public/js/material_request.js",
+        "Request for Quotation": "public/js/rfq.js",
+        "Purchase Order": "public/js/purchase_order.js",
+        "Supplier Quotation": "public/js/supplier_quotation.js",
+        "Purchase Invoice": "public/js/purchase_invoice.js",
+        "Payment Entry": "public/js/payment_entry.js",
+        # "Bill of Entry": "public/js/e_waybill_action.js",
+
+}
+
+
+
+override_doctype_dashboards = {
+    "Purchase Order": "import.config.py.po_dashboard.get_dashboard_data",
+    "Pickup Request": "import.import.doctype.pickup_request.pickup_request.get_dashboard_data",
+}
+
+
+override_whitelisted_methods = {
+    "erpnext.buying.doctype.purchase_order.purchase_order.make_purchase_invoice":
+        "import.config.py.purchase_order.make_purchase_invoice",
+}
+
+doc_events = {
+    "Payment Entry": {
+        "before_save": "import.config.py.payment_entry.set_custom_fields",
+        "validate": "import.config.py.payment_entry.doc_attachment",
+        "before_submit": "import.config.py.payment_entry.doc_attachment2"
+    },
+    "BOE": {
+        "on_submit": "import.config.py.bill_of_entry.update_payment_request"
+    },
+    # "Request for Quotation": {
+    #     "on_submit": "import.config.py.rfq.on_rfq_submit"
+    # }
+}
