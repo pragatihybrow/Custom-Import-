@@ -121,26 +121,6 @@ def get_mr_item_fields(mr_item_name):
 def create_payment_entry_from_po(po_name):
     return get_payment_entry("Purchase Order", po_name)
 
-# @frappe.whitelist()
-# def prepare_payment_entry(dt, dn, party_amount=None, bank_account=None, pickup_request=None):
-#     """
-#     Prepare a Payment Entry for a Purchase Order.
-#     pickup_request: single Pickup Request name (string)
-#     """
-#     po = frappe.get_doc(dt, dn)
-#     pe = get_payment_entry("Purchase Order", po.name)
-#     pr = frappe.get_doc("Pickup Request", pickup_request)
-#     amount_to_pay = flt(party_amount or pr.base_grand_total)
-    
-
-#     payment_entry_doc = get_payment_entry(dt, dn, party_amount=amount_to_pay, bank_account=bank_account)
-
-#     if pickup_request:
-#         payment_entry_doc.custom_pickup_request = pickup_request  # assign single value only
-
-#     return payment_entry_doc
-
-
 
 import frappe
 from frappe.utils import flt
@@ -148,23 +128,70 @@ from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_ent
 
 @frappe.whitelist()
 def prepare_payment_entry(dt, dn, party_amount=None, bank_account=None, pickup_request=None):
-   
     po = frappe.get_doc(dt, dn)
 
     pr = frappe.get_doc("Pickup Request", pickup_request) if pickup_request else None
-    amount_to_pay = frappe.db.sql("""
-        SELECT SUM(amount_in_inr)
+
+    # Fetch sums from Purchase Order Details
+    result = frappe.db.sql("""
+        SELECT 
+            SUM(amount_in_inr) as paid_amount,
+            SUM(amount) as received_amount
         FROM `tabPurchase Order Details`
         WHERE po_number = %s
           AND parent = %s
-    """, (po.name, pickup_request))[0][0] or 0
+    """, (po.name, pickup_request), as_dict=True)
 
-    if not amount_to_pay:
-        amount_to_pay = flt(party_amount or (pr.base_grand_total if pr else 0))
+    paid_amount = flt(result[0].paid_amount) if result else 0
+    received_amount = flt(result[0].received_amount) if result else 0
 
-    payment_entry_doc = get_payment_entry(dt, dn, party_amount=flt(amount_to_pay), bank_account=bank_account)
+    # fallback if no rows or amounts
+    if not paid_amount:
+        paid_amount = flt(party_amount or (pr.base_grand_total if pr else 0))
+    if not received_amount:
+        received_amount = flt(pr.grand_total if pr else 0)
+
+    # Create Payment Entry using only supported args
+    payment_entry_doc = get_payment_entry(
+        dt, dn, 
+        party_amount=paid_amount,
+        bank_account=bank_account
+    )
+
+    # Manually set received_amount
+    payment_entry_doc.received_amount = received_amount
 
     if pickup_request:
         payment_entry_doc.custom_pickup_request = pickup_request
 
     return payment_entry_doc
+
+
+
+
+# import frappe
+# from frappe.utils import flt
+# from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
+
+# @frappe.whitelist()
+# def prepare_payment_entry(dt, dn, party_amount=None, bank_account=None, pickup_request=None):
+   
+#     po = frappe.get_doc(dt, dn)
+
+#     pr = frappe.get_doc("Pickup Request", pickup_request) if pickup_request else None
+#     amount_to_pay = frappe.db.sql("""
+#         SELECT SUM(amount_in_inr)
+#         FROM `tabPurchase Order Details`
+#         WHERE po_number = %s
+#           AND parent = %s
+#     """, (po.name, pickup_request))[0][0] or 0
+
+#     if not amount_to_pay:
+#         amount_to_pay = flt(party_amount or (pr.base_grand_total if pr else 0))
+
+#     payment_entry_doc = get_payment_entry(dt, dn, party_amount=flt(amount_to_pay), bank_account=bank_account)
+
+#     if pickup_request:
+#         payment_entry_doc.custom_pickup_request = pickup_request
+
+#     return payment_entry_doc

@@ -295,7 +295,7 @@
    "fieldname": "total",
    "fieldtype": "Currency",
    "label": "Total ",
-   "options": "Company:company:default_currency"
+   "options": "currency"
   },
   {
    "fieldname": "tax_category",
@@ -390,7 +390,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-09-22 16:30:51.441804",
+ "modified": "2025-09-25 13:57:39.571286",
  "modified_by": "Administrator",
  "module": "Import",
  "name": "Pickup Request",
