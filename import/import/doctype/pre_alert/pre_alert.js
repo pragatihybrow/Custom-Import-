@@ -92,7 +92,343 @@ frappe.ui.form.on("Pre Alert", {
         other_charges_calculation(frm)
     },
 
-    refresh: function (frm) {
+//  refresh: function(frm) {
+//         frm.add_custom_button("Pickup Requests", function () {
+//             // Fetch all valid Pickup Requests that have RFQ and submitted Supplier Quotation
+//             frappe.call({
+//                 method: "import.import.doctype.pre_alert.pre_alert.get_valid_pickup_requests_for_pre_alert",
+//                 callback: function(response) {
+//                     if (!response.message || response.message.length === 0) {
+//                         frappe.msgprint("No valid Pickup Requests found. Pickup Requests must have an RFQ and submitted Supplier Quotation.");
+//                         return;
+//                     }
+                    
+//                     let valid_pickup_requests = response.message;
+
+//                     let d = new frappe.ui.form.MultiSelectDialog({
+//                         doctype: "Pickup Request",
+//                         target: frm,
+//                         setters: {
+//                             port_of_loading_pol: null,
+//                             port_of_destination_pod: null,
+//                             pickup_date_by: null
+//                         },
+//                         add_filters_group: 1,
+//                         date_field: "pickup_date_by",
+//                         columns: ["name", "pickup_date_by", "port_of_loading_pol", "port_of_destination_pod"],
+//                         get_query() {
+//                             return {
+//                                 filters: {
+//                                     docstatus: 1,
+//                                     name: ["in", valid_pickup_requests]
+//                                 }
+//                             };
+//                         },
+//                         action: async function (selections) {
+//                             d.dialog.hide();
+
+//                             if (!selections || selections.length === 0) {
+//                                 frappe.msgprint("No Pickup Requests selected.");
+//                                 return;
+//                             }
+
+//                             let selected_data = [];
+//                             // Fetch details of all selected Pickup Requests
+//                             for (const pr_name of selections) {
+//                                 let r = await frappe.call({
+//                                     method: "import.import.doctype.pre_alert.pre_alert.get_pickup_request_details",
+//                                     args: { pickup_request: pr_name },
+//                                     async: true
+//                                 });
+//                                 if (r.message) {
+//                                     selected_data.push({
+//                                         name: pr_name,
+//                                         vendor: r.message.vendor,
+//                                         pol: r.message.port_of_loading_pol,
+//                                         pod: r.message.port_of_destination_pod,
+//                                         pickup_date: r.message.pickup_date_by,
+//                                         currency: r.message.currency,
+//                                         conversion_rate: r.message.conversion_rate,
+//                                         total_inr_val: r.message.total_inr_val,
+//                                         total_doc_val: r.message.total_doc_val,
+//                                         items: r.message.items,
+//                                         rfqs: r.message.rfqs || []
+//                                     });
+//                                 }
+//                             }
+
+//                             // Validate same vendor, pol, pod, pickup_date, currency
+//                             let vendor = selected_data[0].vendor;
+//                             let pol = selected_data[0].pol;
+//                             let pod = selected_data[0].pod;
+//                             let pickup_date = selected_data[0].pickup_date;
+//                             let currency = selected_data[0].currency;
+
+//                             for (let pr of selected_data) {
+//                                 if (vendor !== pr.vendor) {
+//                                     frappe.msgprint(`Pickup Request ${pr.name} has a different Vendor (${pr.vendor})`);
+//                                     return;
+//                                 }
+//                                 if (pol !== pr.pol) {
+//                                     frappe.msgprint(`Pickup Request ${pr.name} has a different Port of Loading (${pr.pol})`);
+//                                     return;
+//                                 }
+//                                 if (pod !== pr.pod) {
+//                                     frappe.msgprint(`Pickup Request ${pr.name} has a different Port of Destination (${pr.pod})`);
+//                                     return;
+//                                 }
+//                                 if (pickup_date !== pr.pickup_date) {
+//                                     frappe.msgprint(`Pickup Request ${pr.name} has a different Pickup Date (${pr.pickup_date})`);
+//                                     return;
+//                                 }
+//                                 if (currency !== pr.currency) {
+//                                     frappe.msgprint(`Pickup Request ${pr.name} has a different Currency (${pr.currency}). All must be same.`);
+//                                     return;
+//                                 }
+//                             }
+
+//                             // Clear existing child tables
+//                             frm.clear_table("pickup_request");
+//                             frm.clear_table("item_details");
+//                             frm.clear_table("request_for_quotation"); // RFQ child table
+
+//                             // Add Pickup Requests to child table
+//                             selected_data.forEach(pr => {
+//                                 let row = frm.add_child("pickup_request");
+//                                 row.pickup_request = pr.name;
+//                             });
+
+//                             // Add items to child table
+//                             selected_data.forEach(pr => {
+//                                 pr.items.forEach(item => {
+//                                     let item_row = frm.add_child("item_details");
+//                                     item_row.item_code = item.item;
+//                                     item_row.item_name = item.material;
+//                                     item_row.description = item.material_desc;
+//                                     item_row.po_no = item.po_number;
+//                                     item_row.quantity = item.pick_qty;
+//                                     item_row.item_price = item.rate;
+//                                     item_row.amount = item.amount;
+//                                     item_row.total_inr_value = item.amount_in_inr;
+//                                 });
+//                             });
+
+//                             selected_data.forEach(pr => {
+//                                 pr.rfqs.forEach(rfq => {
+//                                     let exists = (frm.doc.rfq_number || []).some(r => r.request_for_quotation === rfq.request_for_quotation);
+//                                     if (!exists) {
+//                                         let rfq_row = frm.add_child("rfq_number");
+//                                         rfq_row.request_for_quotation = rfq.request_for_quotation;
+//                                     }
+//                                 });
+//                             });
+
+
+//                             // Set parent-level fields
+//                             frm.set_value("vendor", vendor);
+//                             frm.set_value("currency", currency);
+//                             frm.set_value("exch_rate", selected_data[0].conversion_rate);
+
+//                             // Sum totals of all selected Pickup Requests
+//                             let total_inr_val = 0;
+//                             let total_doc_val = 0;
+//                             selected_data.forEach(pr => {
+//                                 total_inr_val += pr.total_inr_val || 0;
+//                                 total_doc_val += pr.total_doc_val || 0;
+//                             });
+
+//                             frm.set_value("total_inr_val", total_inr_val);
+//                             frm.set_value("total_doc_val", total_doc_val);
+
+//                             // Refresh fields
+//                             frm.refresh_field("pickup_request");
+//                             frm.refresh_field("item_details");
+//                             frm.refresh_field("rfq_number");
+
+//                             frm.save();
+//                         }
+//                     });
+
+//                     d.dialog.show();
+//                 }
+//             });
+//         }, __("Get Items"));
+    
+ refresh: function(frm) {
+        frm.add_custom_button("Pickup Requests", function () {
+            // Fetch all valid Pickup Requests that have RFQ and submitted Supplier Quotation
+            frappe.call({
+                method: "import.import.doctype.pre_alert.pre_alert.get_valid_pickup_requests_for_pre_alert",
+                callback: function(response) {
+                    if (!response.message || response.message.length === 0) {
+                        frappe.msgprint("No valid Pickup Requests found. Pickup Requests must have an RFQ and submitted Supplier Quotation.");
+                        return;
+                    }
+
+                    let valid_pickup_requests = response.message;
+
+                    let d = new frappe.ui.form.MultiSelectDialog({
+                        doctype: "Pickup Request",
+                        target: frm,
+                        setters: {
+                            port_of_loading_pol: null,
+                            port_of_destination_pod: null,
+                            pickup_date_by: null
+                        },
+                        add_filters_group: 1,
+                        date_field: "pickup_date_by",
+                        columns: ["name", "pickup_date_by", "port_of_loading_pol", "port_of_destination_pod"],
+                        get_query() {
+                            return {
+                                filters: {
+                                    docstatus: 1,
+                                    name: ["in", valid_pickup_requests]
+                                }
+                            };
+                        },
+                        action: async function (selections) {
+                            d.dialog.hide();
+
+                            if (!selections || selections.length === 0) {
+                                frappe.msgprint("No Pickup Requests selected.");
+                                return;
+                            }
+
+                            let selected_data = [];
+                            // Fetch details of all selected Pickup Requests
+                            for (const pr_name of selections) {
+                                let r = await frappe.call({
+                                    method: "import.import.doctype.pre_alert.pre_alert.get_pickup_request_details",
+                                    args: { pickup_request: pr_name },
+                                    async: true
+                                });
+                                if (r.message) {
+                                    selected_data.push({
+                                        name: pr_name,
+                                        vendor: r.message.vendor,
+                                        pol: r.message.port_of_loading_pol,
+                                        pod: r.message.port_of_destination_pod,
+                                        pickup_date: r.message.pickup_date_by,
+                                        currency: r.message.currency,
+                                        conversion_rate: r.message.conversion_rate,
+                                        total_inr_val: r.message.total_inr_val,
+                                        total_doc_val: r.message.total_doc_val,
+                                        items: r.message.items,
+                                        rfqs: r.message.rfqs || []
+                                    });
+                                }
+                            }
+
+                            // Validate same vendor, pol, pod, pickup_date, currency
+                            let vendor = selected_data[0].vendor;
+                            let pol = selected_data[0].pol;
+                            let pod = selected_data[0].pod;
+                            let pickup_date = selected_data[0].pickup_date;
+                            let currency = selected_data[0].currency;
+
+                            for (let pr of selected_data) {
+                                if (vendor !== pr.vendor) {
+                                    frappe.msgprint(`Pickup Request ${pr.name} has a different Vendor (${pr.vendor})`);
+                                    return;
+                                }
+                                if (pol !== pr.pol) {
+                                    frappe.msgprint(`Pickup Request ${pr.name} has a different Port of Loading (${pr.pol})`);
+                                    return;
+                                }
+                                if (pod !== pr.pod) {
+                                    frappe.msgprint(`Pickup Request ${pr.name} has a different Port of Destination (${pr.pod})`);
+                                    return;
+                                }
+                                if (pickup_date !== pr.pickup_date) {
+                                    frappe.msgprint(`Pickup Request ${pr.name} has a different Pickup Date (${pr.pickup_date})`);
+                                    return;
+                                }
+                                if (currency !== pr.currency) {
+                                    frappe.msgprint(`Pickup Request ${pr.name} has a different Currency (${pr.currency}). All must be same.`);
+                                    return;
+                                }
+                            }
+
+                            // Clear existing Pickup Requests and Items child tables
+                            frm.clear_table("pickup_request");
+                            frm.clear_table("item_details");
+
+                            // Add Pickup Requests to child table
+                            selected_data.forEach(pr => {
+                                let row = frm.add_child("pickup_request");
+                                row.pickup_request = pr.name;
+                            });
+
+                            // Add items to child table
+                            selected_data.forEach(pr => {
+                                pr.items.forEach(item => {
+                                    let item_row = frm.add_child("item_details");
+                                    item_row.item_code = item.item;
+                                    item_row.item_name = item.material;
+                                    item_row.description = item.material_desc;
+                                    item_row.po_no = item.po_number;
+                                    item_row.quantity = item.pick_qty;
+                                    item_row.item_price = item.rate;
+                                    item_row.amount = item.amount;
+                                    item_row.total_inr_value = item.amount_in_inr;
+                                });
+                            });
+
+                            // ---- RFQ handling ----
+                            let rfq_set = new Set();
+                            selected_data.forEach(pr => {
+                                pr.rfqs.forEach(rfq => rfq_set.add(rfq.request_for_quotation));
+                            });
+
+                                                    // Remove RFQs that are no longer linked
+                            let rfq_table = frm.doc.rfq_number || [];
+                            for (let i = rfq_table.length - 1; i >= 0; i--) {  // iterate backwards
+                                if (!rfq_set.has(rfq_table[i].request_for_quotation)) {
+                                    frm.doc.rfq_number.splice(i, 1);
+                                }
+                            }
+                            frm.refresh_field("rfq_number");
+
+
+                            // Add missing RFQs
+                            rfq_set.forEach(rfq_name => {
+                                let exists = (frm.doc.rfq_number || []).some(r => r.request_for_quotation === rfq_name);
+                                if (!exists) {
+                                    let rfq_row = frm.add_child("rfq_number");
+                                    rfq_row.request_for_quotation = rfq_name;
+                                }
+                            });
+
+                            frm.refresh_field("pickup_request");
+                            frm.refresh_field("item_details");
+                            frm.refresh_field("rfq_number");
+
+                            // Set parent-level fields
+                            frm.set_value("vendor", vendor);
+                            frm.set_value("currency", currency);
+                            frm.set_value("exch_rate", selected_data[0].conversion_rate);
+
+                            // Sum totals of all selected Pickup Requests
+                            let total_inr_val = 0;
+                            let total_doc_val = 0;
+                            selected_data.forEach(pr => {
+                                total_inr_val += pr.total_inr_val || 0;
+                                total_doc_val += pr.total_doc_val || 0;
+                            });
+
+                            frm.set_value("total_inr_val", total_inr_val);
+                            frm.set_value("total_doc_val", total_doc_val);
+
+                            // Save the form
+                            frm.save();
+                        }
+                    });
+
+                    d.dialog.show();
+                }
+            });
+        }, __("Get Items"));
+
         frm.add_custom_button("Calculate", function (obj) {
             freight_amt_calculation(frm)
             insurance_calculation(frm)
@@ -102,8 +438,7 @@ frappe.ui.form.on("Pre Alert", {
             calculation_of_rodtep(frm)
         })
         
-        // rest of your refresh logic unchanged...
-        // (Bill of Entry, Rodtep button, notes rendering, CHA restrictions, etc.)
+        
     },
 
     // total_doc_val: function (frm) {
@@ -494,6 +829,7 @@ frappe.ui.form.on('Pre Alert', {
             await mark_cha_edited_once(frm);
         }
     }
+    
 });
 
 // Define as separate helper function
@@ -511,3 +847,148 @@ async function mark_cha_edited_once(frm) {
         }
     });
 }
+
+
+// // Copyright (c) 2025, Pragati Dike and contributors
+// // For license information, please see license.txt
+
+// frappe.ui.form.on('Pre Alert', {
+//     refresh: function(frm) {
+//         // Add button to fetch from Pickup Request (only in draft mode)
+//         if (frm.doc.docstatus === 0 && !frm.doc.pickup_request) {
+//             frm.add_custom_button(__('Get from Pickup Request'), function() {
+//                 show_pickup_request_dialog(frm);
+//             });
+//         }
+//     },
+    
+//     pickup_request: function(frm) {
+//         if (frm.doc.pickup_request) {
+//             fetch_pickup_request_details(frm);
+//         }
+//     }
+// });
+
+// function show_pickup_request_dialog(frm) {
+//     // Fetch Pickup Requests that don't have Pre Alerts yet
+//     frappe.call({
+//         method: 'import.import.doctype.pre_alert.pre_alert.get_available_pickup_requests',
+//         callback: function(r) {
+//             if (r.message && r.message.length > 0) {
+//                 let d = new frappe.ui.Dialog({
+//                     title: 'Select Pickup Request',
+//                     fields: [
+//                         {
+//                             fieldname: 'pickup_request',
+//                             label: 'Pickup Request',
+//                             fieldtype: 'Select',
+//                             options: r.message.map(pr => pr.name),
+//                             reqd: 1
+//                         },
+//                         {
+//                             fieldname: 'pickup_details',
+//                             label: 'Details',
+//                             fieldtype: 'HTML'
+//                         }
+//                     ],
+//                     primary_action_label: 'Get Items',
+//                     primary_action: function(values) {
+//                         frm.set_value('pickup_request', values.pickup_request);
+//                         d.hide();
+//                     }
+//                 });
+                
+//                 // Show pickup request details when selected
+//                 d.fields_dict.pickup_request.$input.on('change', function() {
+//                     let selected_pr = $(this).val();
+//                     let pr_data = r.message.find(pr => pr.name === selected_pr);
+                    
+//                     if (pr_data) {
+//                         let html = `
+//                             <div style="padding: 10px; background: #f8f9fa; border-radius: 4px; margin-top: 10px;">
+//                                 <table class="table table-bordered" style="margin: 0;">
+//                                     <tr>
+//                                         <td><strong>Total Quantity:</strong></td>
+//                                         <td>${pr_data.total_picked_quantity || 0}</td>
+//                                     </tr>
+//                                     <tr>
+//                                         <td><strong>Grand Total:</strong></td>
+//                                         <td>${format_currency(pr_data.grand_total || 0, pr_data.currency)}</td>
+//                                     </tr>
+//                                     <tr>
+//                                         <td><strong>Items Count:</strong></td>
+//                                         <td>${pr_data.items_count || 0}</td>
+//                                     </tr>
+//                                 </table>
+//                             </div>
+//                         `;
+//                         d.fields_dict.pickup_details.$wrapper.html(html);
+//                     }
+//                 });
+                
+//                 d.show();
+//             } else {
+//                 frappe.msgprint({
+//                     title: __('No Pickup Requests Available'),
+//                     message: __('All submitted Pickup Requests already have Pre Alerts created.'),
+//                     indicator: 'orange'
+//                 });
+//             }
+//         }
+//     });
+// }
+
+// function fetch_pickup_request_details(frm) {
+//     if (!frm.doc.pickup_request) return;
+    
+//     frappe.call({
+//         method: 'import.import.doctype.pre_alert.pre_alert.get_pickup_request_details',
+//         args: {
+//             pickup_request: frm.doc.pickup_request
+//         },
+//         callback: function(r) {
+//             if (r.message) {
+//                 let data = r.message;
+                
+//                 // Set header fields
+//                 frm.set_value('rfq_number', data.rfq_number);
+//                 frm.set_value('vendor', data.vendor);
+//                 frm.set_value('currency', data.currency);
+//                 frm.set_value('exch_rate', data.conversion_rate);
+//                 frm.set_value('total_doc_val', data.grand_total);
+//                 frm.set_value('total_inr_val', data.base_grand_total);
+                
+//                 // Clear and populate item details
+//                 frm.clear_table('item_details');
+                
+//                 if (data.items && data.items.length > 0) {
+//                     data.items.forEach(function(item) {
+//                         let row = frm.add_child('item_details');
+//                         row.item_code      = item.item;
+//                         row.item_name      = item.material;
+//                         row.description    = item.material_desc;
+                        
+//                         // Corrected mappings for your child table
+//                         row.po_no          = item.po_number;      // PO No
+//                         row.quantity       = item.pick_qty;       // Qty
+//                         row.item_price     = item.rate;           // Rate
+//                         row.amount         = item.amount;         // Amount
+//                         row.total_inr_value = item.amount_in_inr; // Amount in INR
+//                         row.currency       = item.currency;       // Currency
+//                         row.currency_rate  = item.currency_rate;  // Currency Rate
+//                     });
+//                 }
+                
+//                 frm.refresh_field('item_details');
+                
+//                 frappe.show_alert({
+//                     message: __('Pickup Request details fetched successfully'),
+//                     indicator: 'green'
+//                 }, 5);
+//             }
+//         }
+//     });
+// }
+
+
+

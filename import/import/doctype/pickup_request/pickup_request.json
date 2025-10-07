@@ -246,13 +246,13 @@
    "options": "Country"
   },
   {
-   "fetch_from": "port_of_loading_pol.port_name",
+   "fetch_from": "port_of_loading_pol.port_code",
    "fieldname": "pol_code",
    "fieldtype": "Data",
    "label": "POL Code "
   },
   {
-   "fetch_from": "port_of_destination_pod.port_name",
+   "fetch_from": "port_of_destination_pod.port_code",
    "fieldname": "pod_code",
    "fieldtype": "Data",
    "label": "POD Code"
@@ -390,7 +390,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-09-25 13:57:39.571286",
+ "modified": "2025-10-01 11:38:44.331196",
  "modified_by": "Administrator",
  "module": "Import",
  "name": "Pickup Request",

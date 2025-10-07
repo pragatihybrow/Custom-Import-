@@ -118,6 +118,36 @@ def make_bill_of_entry(source_name, args=None):
     return create_boe_from_purchase_order(source_name, **args)
 
 
+
+@frappe.whitelist()
+def get_pickup_requests_for_po(po_name):
+    """
+    Find all submitted Pickup Requests that contain the given Purchase Order
+    in their child table.
+    """
+    # Query submitted Pickup Requests
+    pickup_requests = frappe.get_all(
+        "Pickup Request",
+        filters={"docstatus": 1},
+        fields=["name"]
+    )
+    
+    valid_pickup_requests = []
+    
+    # Check each Pickup Request's child table for the PO
+    for pr in pickup_requests:
+        pr_doc = frappe.get_doc("Pickup Request", pr.name)
+        
+        # Check if this PO exists in the child table
+        # Adjust 'po_ct' to your actual child table fieldname
+        if hasattr(pr_doc, 'po_ct'):
+            for child in pr_doc.po_ct:
+                if child.po_no == po_name:
+                    valid_pickup_requests.append(pr.name)
+                    break  # Found it, move to next Pickup Request
+    
+    return valid_pickup_requests
+
 class BOE(Document):
     def validate(self):
         self.calculate_totals()

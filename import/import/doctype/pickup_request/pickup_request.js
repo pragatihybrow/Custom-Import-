@@ -3,55 +3,99 @@
 
 frappe.ui.form.on('Pickup Request', {
     refresh: function(frm) {
-         if (frm.doc.docstatus == 1) {
-            frappe.call({
-                method: 'frappe.client.get_list',
-                args: {
-                    doctype: 'Request for Quotation',
-                    filters: {
-                        'custom_pickup_request': frm.doc.name
-                    },
-                    fields: ['name']
+    if (frm.doc.docstatus == 1) {
+        frappe.call({
+            method: 'frappe.client.get_list',
+            args: {
+                doctype: 'Request for Quotation',
+                filters: {
+                    'custom_pickup_request': frm.doc.name
                 },
-                callback: function (r) {
-                    if (r.message && r.message.length > 0) {
-                        frappe.call({
-                            method: "frappe.client.get_list",
-                            args: {
-                                doctype: "Supplier Quotation",
-                                filters: {
-                                    custom_pickup_request: frm.doc.name,
-                                    docstatus: 1
-                                },
-                                fields: ['supplier']
+                fields: ['name']
+            },
+            callback: function (r) {
+                if (r.message && r.message.length > 0) {
+                    frappe.call({
+                        method: "frappe.client.get_list",
+                        args: {
+                            doctype: "Supplier Quotation",
+                            filters: {
+                                custom_pickup_request: frm.doc.name,
+                                docstatus: 1
                             },
-                            callback: function (response) {
-                                frm.add_custom_button("Pre Alert", function () {
-                                    // Check if supplier data is missing or empty
-                                    if (!response.message || response.message.length === 0 || !response.message[0]['supplier']) {
-                                        frappe.msgprint({
-                                            title: __('Error'),
-                                            indicator: 'red',
-                                            message: __('No Supplier Quotation found for this RFQ and Pickup Request. Please create a Supplier Quotation first.')
-                                        });
-                                        return;
-                                    }
-
-                                    // Proceed to create "Pre Alert" if supplier data is available
-                                    frappe.new_doc("Pre Alert", {
-                                        'pickup_request': frm.doc.name,
-                                        'rfq_number': r.message[0]['name'],
-                                        'vendor': response.message[0]['supplier']
-                                    }).then(doc => {
-                                        frappe.set_route('Form', 'Pre Alert', doc.name);
+                            fields: ['supplier']
+                        },
+                        callback: function (response) {
+                            frm.add_custom_button("Pre Alert", function () {
+                                // Check if supplier data is missing or empty
+                                if (!response.message || response.message.length === 0 || !response.message[0]['supplier']) {
+                                    frappe.msgprint({
+                                        title: __('Error'),
+                                        indicator: 'red',
+                                        message: __('No Supplier Quotation found for this RFQ and Pickup Request. Please create a Supplier Quotation first.')
                                     });
-                                }, ("Create"));
-                            }
-                        })
-                    }
+                                    return;
+                                }
+                                
+                                // Fetch pickup request details using server method
+                                frappe.call({
+                                    method: "import.import.doctype.pre_alert.pre_alert.get_pickup_request_details",
+                                    args: { pickup_request: frm.doc.name },
+                                    callback: function(pr_data) {
+                                        if (pr_data.message) {
+                                            let pr = pr_data.message;
+                                            
+                                            // Create new Pre Alert
+                                            frappe.model.with_doctype('Pre Alert', function() {
+                                                let pre_alert = frappe.model.get_new_doc('Pre Alert');
+                                                
+                                                // Set vendor and other parent fields
+                                                pre_alert.vendor = response.message[0]['supplier'];
+                                                pre_alert.currency = pr.currency || 'INR';
+                                                pre_alert.exch_rate = pr.conversion_rate || 1;
+                                                pre_alert.total_doc_val = pr.total_doc_val || 0;
+                                                pre_alert.total_inr_val = pr.total_inr_val || 0;
+                                                
+                                                // Add Pickup Request to child table
+                                                let pickup_row = frappe.model.add_child(pre_alert, 'Pickup Request CT', 'pickup_request');
+                                                pickup_row.pickup_request = frm.doc.name;
+                                                
+                                                // Add RFQ to child table
+                                                if (r.message[0]['name']) {
+                                                    let rfq_row = frappe.model.add_child(pre_alert, 'Request For Quotation CT', 'rfq_number');
+                                                    rfq_row.request_for_quotation = r.message[0]['name'];
+                                                }
+                                                
+                                                // Add items to Pre Alert item_details child table
+                                                if (pr.items && pr.items.length > 0) {
+                                                    pr.items.forEach(function(item) {
+                                                        let item_row = frappe.model.add_child(pre_alert, 'Pre-Alert Item Details', 'item_details');
+                                                        
+                                                        item_row.item_code = item.item;
+                                                        item_row.item_name = item.material;
+                                                        item_row.description = item.material_desc;
+                                                        item_row.po_no = item.po_number;
+                                                        item_row.quantity = item.pick_qty;
+                                                        item_row.item_price = item.rate;
+                                                        item_row.amount = item.amount;
+                                                        item_row.total_inr_value = item.amount_in_inr;
+                                                    });
+                                                }
+                                                
+                                                // Navigate to the form
+                                                frappe.set_route('Form', 'Pre Alert', pre_alert.name);
+                                            });
+                                        }
+                                    }
+                                });
+                            }, ("Create"));
+                        }
+                    })
                 }
-            })
-        }
+            }
+        })
+    }
+
         if (frm.doc.docstatus == 1) {
             frm.add_custom_button('Create RFQ', () => {
                 show_supplier_popup(frm);
@@ -660,6 +704,7 @@ function update_currency_rates(frm) {
     });
 }
 
+
 function show_supplier_popup(frm) {
     const d = new frappe.ui.Dialog({
         title: 'Create RFQ - Add Suppliers',
@@ -694,65 +739,125 @@ function show_supplier_popup(frm) {
             // Disable the dialog during processing
             d.disable_primary_action();
             
-            frappe.call({
-                method: 'import.import.doctype.pickup_request.pickup_request.create_rfq_from_pickup_request',  
-                args: {
-                    pickup_request: frm.doc.name,
-                    suppliers: values.supplier_table,
-                    email_template: values.email_template,
-                },
-                callback: function(r) {
-                    console.log('Response:', r); // Debug log
-                    
+            // Validate supplier emails before proceeding
+            validate_supplier_emails(values.supplier_table, function(validation_result) {
+                if (!validation_result.valid) {
                     // Re-enable the dialog
                     d.enable_primary_action();
                     
-                    // Check if the call was successful
-                    if (r && !r.exc && r.message) {
-                        frappe.msgprint({
-                            title: 'Success',
-                            indicator: 'green',
-                            message: `RFQ <a href="/app/request-for-quotation/${r.message}" target="_blank">${r.message}</a> created successfully`
-                        });
-                        d.hide(); // Close the dialog
-                        frm.reload_doc(); // Refresh the form
-                    } else {
-                        // Handle server-side errors
-                        let error_message = 'Failed to create RFQ.';
-                        if (r.exc) {
-                            console.error('Server error:', r.exc);
-                            // Try to extract meaningful error message
-                            if (typeof r.exc === 'string' && r.exc.includes('ValidationError')) {
-                                error_message = 'Validation error occurred. Please check your data.';
-                            } else if (typeof r.exc === 'string' && r.exc.includes('PermissionError')) {
-                                error_message = 'Permission denied. Please check your access rights.';
+                    // Show error message with suppliers missing emails
+                    frappe.msgprint({
+                        title: 'Missing Email Addresses',
+                        indicator: 'red',
+                        message: `The following suppliers don't have email addresses:<br><br>
+                                 <strong>${validation_result.missing_emails.join('<br>')}</strong><br><br>
+                                 Please add email addresses to these suppliers before creating the RFQ.`
+                    });
+                    return;
+                }
+                
+                // If validation passes, proceed with RFQ creation
+                frappe.call({
+                    method: 'import.import.doctype.pickup_request.pickup_request.create_rfq_from_pickup_request',  
+                    args: {
+                        pickup_request: frm.doc.name,
+                        suppliers: values.supplier_table,
+                        email_template: values.email_template,
+                    },
+                    callback: function(r) {
+                        console.log('Response:', r); // Debug log
+                        
+                        // Re-enable the dialog
+                        d.enable_primary_action();
+                        
+                        // Check if the call was successful
+                        if (r && !r.exc && r.message) {
+                            frappe.msgprint({
+                                title: 'Success',
+                                indicator: 'green',
+                                message: `RFQ <a href="/app/request-for-quotation/${r.message}" target="_blank">${r.message}</a> created successfully`
+                            });
+                            d.hide(); // Close the dialog
+                            frm.reload_doc(); // Refresh the form
+                        } else {
+                            // Handle server-side errors
+                            let error_message = 'Failed to create RFQ.';
+                            if (r.exc) {
+                                console.error('Server error:', r.exc);
+                                // Try to extract meaningful error message
+                                if (typeof r.exc === 'string' && r.exc.includes('ValidationError')) {
+                                    error_message = 'Validation error occurred. Please check your data.';
+                                } else if (typeof r.exc === 'string' && r.exc.includes('PermissionError')) {
+                                    error_message = 'Permission denied. Please check your access rights.';
+                                }
                             }
+                            
+                            frappe.msgprint({
+                                title: 'Error',
+                                indicator: 'red',
+                                message: error_message + ' Please check the server logs for details.'
+                            });
                         }
+                    },
+                    error: function(r) {
+                        console.error('AJAX Error:', r); // Debug log
+                        
+                        // Re-enable the dialog
+                        d.enable_primary_action();
                         
                         frappe.msgprint({
                             title: 'Error',
                             indicator: 'red',
-                            message: error_message + ' Please check the server logs for details.'
+                            message: 'Network error occurred while creating the RFQ. Please try again.'
                         });
                     }
-                },
-                error: function(r) {
-                    console.error('AJAX Error:', r); // Debug log
-                    
-                    // Re-enable the dialog
-                    d.enable_primary_action();
-                    
-                    frappe.msgprint({
-                        title: 'Error',
-                        indicator: 'red',
-                        message: 'Network error occurred while creating the RFQ. Please try again.'
-                    });
-                }
+                });
             });
         }
     });
 
     d.show();
+}
+
+// Helper function to validate supplier emails
+function validate_supplier_emails(suppliers, callback) {
+    const supplier_names = suppliers.map(s => s.supplier);
+    
+    frappe.call({
+        method: 'frappe.client.get_list',
+        args: {
+            doctype: 'Supplier',
+            filters: [['name', 'in', supplier_names]],
+            fields: ['name', 'email_id']
+        },
+        callback: function(r) {
+            if (r.message) {
+                const missing_emails = [];
+                
+                r.message.forEach(supplier => {
+                    if (!supplier.email_id || supplier.email_id.trim() === '') {
+                        missing_emails.push(supplier.name);
+                    }
+                });
+                
+                callback({
+                    valid: missing_emails.length === 0,
+                    missing_emails: missing_emails
+                });
+            } else {
+                callback({
+                    valid: false,
+                    missing_emails: supplier_names
+                });
+            }
+        },
+        error: function() {
+            callback({
+                valid: false,
+                missing_emails: supplier_names
+            });
+        }
+    });
 }
 
 // Legacy function - kept for backward compatibility
@@ -761,34 +866,6 @@ function calculation_of_amount_and_inr_amount(frm) {
 }
 
 
-// frappe.ui.form.on("Pickup Request", {
-//     refresh(frm) {
-//         if (frm.doc.docstatus === 1 && !frm.doc.custom_po_updated) {
-//             frappe.call({
-//                 method: "import.import.doctype.pickup_request.pickup_request.should_show_update_button",
-//                 args: {
-//                     pickup_request: frm.doc.name
-//                 },
-//                 callback: function (r) {
-//                     if (r.message === true) {
-//                         frm.add_custom_button("Update PO Pickup Qty", function () {
-//                             frappe.call({
-//                                 method: "import.import.doctype.pickup_request.pickup_request.trigger_pickup_updates",
-//                                 args: {
-//                                     pickup_request: frm.doc.name
-//                                 },
-//                                 callback: function () {
-//                                     frappe.msgprint("Purchase Orders updated.");
-//                                     frm.reload_doc();  // Reload to hide button next time
-//                                 }
-//                             });
-//                         });
-//                     }
-//                 }
-//             });
-//         }
-//     }
-// });
 frappe.ui.form.on("Pickup Request", {
     refresh(frm) {
         // Only show button if doc is submitted and not already updated
@@ -876,21 +953,6 @@ frappe.ui.form.on('Pickup Request', {
         }
     },
     
-    // refresh: function(frm) {
-    //     // Add custom button to recalculate taxes
-    //     if (!frm.doc.__islocal) {
-    //         frm.add_custom_button(__('Recalculate Taxes'), function() {
-    //             frappe.call({
-    //                 method: "calculate_taxes_and_totals",
-    //                 doc: frm.doc,
-    //                 callback: function(r) {
-    //                     frm.refresh_fields();
-    //                     frappe.show_alert(__('Taxes recalculated'));
-    //                 }
-    //             });
-    //         });
-    //     }
-    // },
     
     validate: function(frm) {
         // Ensure taxes are calculated before saving

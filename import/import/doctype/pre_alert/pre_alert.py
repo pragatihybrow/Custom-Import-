@@ -167,3 +167,268 @@ def send_mail_to_cha(cha_name, doc_name):
 
     return "Email sent successfully with Excel attachment."
 
+
+# import/import/doctype/pre_alert/pre_alert.py
+
+import frappe
+
+@frappe.whitelist()
+def get_pickup_request_details(pickup_name):
+    """Fetch Pickup Request details for the given name"""
+    
+    if not pickup_name:
+        return None
+
+    # Get Pickup Request doc
+    pickup = frappe.get_doc("Pickup Request", pickup_name)
+
+    # Use correct child table: purchase_order_details
+    items = []
+    for row in pickup.get("purchase_order_details") or []:
+        items.append({
+            "item": row.get("item"),
+            "material": row.get("material"),
+            "material_desc": row.get("material_desc"),
+            "pick_qty": row.get("pick_qty"),
+            "po_number": row.get("po_number"),
+            "rate": row.get("rate") or 0,
+            "amount": row.get("amount") or 0,
+            "quantity": row.get("quantity") or 0,
+            "amount_in_inr": row.get("amount_in_inr") or 0
+        })
+
+    # Attachments: if you have a field like attachments, replace this
+    attachments = []
+    for file in pickup.get("attachments") or []:
+        attachments.append({
+            "description": file.get("file_name"),
+            "attach_file": file.get("file_url")
+        })
+
+    return {
+        "name": pickup.name,
+        "transaction_date": pickup.get("po_date"),  
+        "customer": pickup.get("company"),          #
+        "status": pickup.get("status") or pickup.get("workflow_state"),
+        "items": items,
+        "attachments": attachments,
+        "currency": pickup.get("currency"),
+        "exchange_rate": pickup.get("conversion_rate") or 1
+    }
+
+
+
+@frappe.whitelist()
+def get_available_pickup_requests():
+    """
+    Get all submitted Pickup Requests that don't have Pre Alerts created yet
+    """
+    # Get all Pickup Request names that already have Pre Alerts
+    existing_pre_alerts = frappe.get_all(
+        'Pre Alert',
+        filters={'docstatus': ['!=', 2]},  # Exclude cancelled
+        fields=['pickup_request']
+    )
+    
+    existing_pickup_requests = [d.pickup_request for d in existing_pre_alerts if d.pickup_request]
+    
+    # Build filters
+    filters = {
+        'docstatus': 1,  # Only submitted
+    }
+    
+    # Exclude Pickup Requests that already have Pre Alerts
+    if existing_pickup_requests:
+        filters['name'] = ['not in', existing_pickup_requests]
+    
+    # Get available Pickup Requests
+    pickup_requests = frappe.get_all(
+        'Pickup Request',
+        filters=filters,
+        fields=[
+            'name',
+            'total_picked_quantity',
+            'grand_total',
+            'base_grand_total',
+            'currency',
+            'conversion_rate'
+        ],
+        order_by='creation desc'
+    )
+    
+    # Add items count for each pickup request
+    for pr in pickup_requests:
+        items_count = frappe.db.count(
+            'Purchase Order Details',
+            filters={'parent': pr.name}
+        )
+        pr['items_count'] = items_count
+    
+    return pickup_requests
+
+
+
+@frappe.whitelist()
+def get_pickup_request_details(pickup_request):
+    """
+    Get all details from Pickup Request including items and RFQs
+    """
+    if not pickup_request:
+        frappe.throw(_("Pickup Request is required"))
+    
+    # Get Pickup Request document
+    pr_doc = frappe.get_doc('Pickup Request', pickup_request)
+    
+    # Check if Pre Alert already exists for this Pickup Request
+    existing_pre_alert = frappe.db.exists(
+        'Pre Alert',
+        {
+            'pickup_request': pickup_request,
+            'docstatus': ['!=', 2]
+        }
+    )
+    
+    if existing_pre_alert:
+        frappe.msgprint(
+            _('A Pre Alert already exists for this Pickup Request: {0}').format(existing_pre_alert),
+            indicator='orange'
+        )
+    
+    # ✅ Get all RFQs linked to this Pickup Request
+    rfqs = []
+    rfq_list = frappe.get_all(
+        'Request for Quotation',
+        filters={'custom_pickup_request': pickup_request},
+        fields=['name']
+    )
+    for rfq in rfq_list:
+        rfqs.append({"request_for_quotation": rfq.name})
+    
+    # Get Vendor from Supplier Quotation (submitted)
+    vendor = None
+    sq_list = frappe.get_all(
+        'Supplier Quotation',
+        filters={
+            'custom_pickup_request': pickup_request,
+            'docstatus': 1
+        },
+        fields=['supplier'],
+        limit=1
+    )
+    if sq_list:
+        vendor = sq_list[0].supplier
+    
+    # If vendor not found in Supplier Quotation, try from name_of_supplier in Pickup Request
+    if not vendor and pr_doc.get('name_of_supplier') and len(pr_doc.name_of_supplier) > 0:
+        vendor = pr_doc.name_of_supplier[0].supplier
+    
+    # Prepare items data
+    items = []
+    if pr_doc.get('purchase_order_details'):
+        for item in pr_doc.purchase_order_details:
+            items.append({
+                'item': item.item,
+                'material': item.material,
+                'material_desc': item.material_desc,
+                'pick_qty': item.pick_qty,
+                'rate': item.rate,
+                'amount': item.amount,
+                'amount_in_inr': item.amount_in_inr,
+                'po_number': item.po_number,
+                'currency': item.currency,
+                'currency_rate': item.currency_rate
+            })
+    
+    # ✅ Return all required data including RFQs list
+    return {
+        'rfqs': rfqs,   # always a list, safe for frontend loop
+        'vendor': vendor,
+        'currency': pr_doc.get('currency') or 'INR',
+        'conversion_rate': pr_doc.get('conversion_rate') or 1.0,
+        "total_inr_val": pr_doc.get('base_total') or 0,
+        "total_doc_val": pr_doc.get('total') or 0,
+        'grand_total': pr_doc.get('grand_total') or 0,
+        'base_grand_total': pr_doc.get('base_grand_total') or 0,
+        'total_picked_quantity': pr_doc.get('total_picked_quantity') or 0,
+        'items': items
+    }
+
+
+@frappe.whitelist()
+def validate_pickup_request_pre_alert(pickup_request):
+    """
+    Validate if a Pre Alert can be created for this Pickup Request
+    """
+    if not pickup_request:
+        return {'valid': False, 'message': 'Pickup Request is required'}
+    
+    # Check if Pickup Request exists and is submitted
+    pr_doc = frappe.db.get_value(
+        'Pickup Request',
+        pickup_request,
+        ['name', 'docstatus'],
+        as_dict=True
+    )
+    
+    if not pr_doc:
+        return {'valid': False, 'message': 'Pickup Request not found'}
+    
+    if pr_doc.docstatus != 1:
+        return {'valid': False, 'message': 'Pickup Request must be submitted'}
+    
+    # Check if Pre Alert already exists
+    existing_pre_alert = frappe.db.exists(
+        'Pre Alert',
+        {
+            'pickup_request': pickup_request,
+            'docstatus': ['!=', 2]
+        }
+    )
+    
+    if existing_pre_alert:
+        return {
+            'valid': False,
+            'message': f'Pre Alert already exists: {existing_pre_alert}'
+        }
+    
+    return {'valid': True, 'message': 'Valid for Pre Alert creation'}
+
+
+
+@frappe.whitelist()
+def get_valid_pickup_requests_for_pre_alert():
+    """
+    Get all Pickup Requests that have both RFQ and submitted Supplier Quotation
+    """
+    # Get all submitted Pickup Requests
+    pickup_requests = frappe.get_all(
+        'Pickup Request',
+        filters={'docstatus': 1},
+        pluck='name'
+    )
+    
+    valid_pickup_requests = []
+    
+    for pr_name in pickup_requests:
+        # Check if RFQ exists
+        rfq_exists = frappe.db.exists(
+            'Request for Quotation',
+            {'custom_pickup_request': pr_name}
+        )
+        
+        if not rfq_exists:
+            continue
+        
+        # Check if submitted Supplier Quotation exists
+        sq_exists = frappe.db.exists(
+            'Supplier Quotation',
+            {
+                'custom_pickup_request': pr_name,
+                'docstatus': 1
+            }
+        )
+        
+        if sq_exists:
+            valid_pickup_requests.append(pr_name)
+    
+    return valid_pickup_requests

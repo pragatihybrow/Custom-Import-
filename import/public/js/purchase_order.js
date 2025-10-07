@@ -11,7 +11,7 @@ frappe.ui.form.on("Purchase Order", {
             }
         }
         update_progress_tracking(frm);
-        handle_import_customizations(frm);
+        // handle_import_customizations(frm);
         add_conditional_buttons(frm);
 
     },
@@ -248,103 +248,103 @@ function setup_field_queries(frm) {
 
 
 
-function handle_import_customizations(frm) {
-    if (!frm.doc.custom_pickup_request?.length) {
-        hide_payment_button(frm);
-        return;
-    }
+// function handle_import_customizations(frm) {
+//     if (!frm.doc.custom_pickup_request?.length) {
+//         hide_payment_button(frm);
+//         return;
+//     }
 
-    let pickup_request_names = frm.doc.custom_pickup_request.map(row => row.pickup_request);
+//     let pickup_request_names = frm.doc.custom_pickup_request.map(row => row.pickup_request);
 
-    frappe.call({
-        method: "frappe.client.get_list",
-        args: {
-            doctype: "Pre Alert",
-            filters: { pickup_request: ['in', pickup_request_names] },
-            fields: ["name"],
-            limit_page_length: 1
-        },
-        callback: function(r) {
-            if (!r.exc && r.message?.length) {
-                add_custom_payment_button(frm);
-            } else {
-                hide_payment_button(frm);
-            }
-        }
-    });
-}
+//     frappe.call({
+//         method: "frappe.client.get_list",
+//         args: {
+//             doctype: "Pre Alert",
+//             filters: { pickup_request: ['in', pickup_request_names] },
+//             fields: ["name"],
+//             limit_page_length: 1
+//         },
+//         callback: function(r) {
+//             if (!r.exc && r.message?.length) {
+//                 add_custom_payment_button(frm);
+//             } else {
+//                 hide_payment_button(frm);
+//             }
+//         }
+//     });
+// }
 
 
-function hide_payment_button(frm) {
-    setTimeout(() => {
-        frm.remove_custom_button('Payment');
-        frm.remove_custom_button('Payment', 'Create');
-    }, 100);
-}
+// function hide_payment_button(frm) {
+//     setTimeout(() => {
+//         frm.remove_custom_button('Payment');
+//         frm.remove_custom_button('Payment', 'Create');
+//     }, 100);
+// }
 
-function add_custom_payment_button(frm) {
-    setTimeout(() => {
-        frm.remove_custom_button('Payment');
-        frm.remove_custom_button('Payment', 'Create');
+// function add_custom_payment_button(frm) {
+//     setTimeout(() => {
+//         frm.remove_custom_button('Payment');
+//         frm.remove_custom_button('Payment', 'Create');
 
-        frm.add_custom_button(__('Payment'), function() {
-            select_pickup_request_dialog(frm);
-        }, __('Create'));
-    }, 100);
-}
+//         frm.add_custom_button(__('Payment'), function() {
+//             select_pickup_request_dialog(frm);
+//         }, __('Create'));
+//     }, 100);
+// }
 
-function select_pickup_request_dialog(frm) {
-    let pickup_requests = frm.doc.custom_pickup_request.map(row => row.pickup_request);
+// function select_pickup_request_dialog(frm) {
+//     let pickup_requests = frm.doc.custom_pickup_request.map(row => row.pickup_request);
 
-    if (!pickup_requests.length) {
-        frappe.msgprint(__('No Pickup Requests linked to this Purchase Order.'));
-        return;
-    }
+//     if (!pickup_requests.length) {
+//         frappe.msgprint(__('No Pickup Requests linked to this Purchase Order.'));
+//         return;
+//     }
 
-    let dialog = new frappe.ui.Dialog({
-        title: __('Select Pickup Request for Payment'),
-        fields: [
-            {
-                fieldname: 'pickup_request',
-                fieldtype: 'Link',
-                options: 'Pickup Request',
-                label: __('Pickup Request'),
-                reqd: 1,
-                get_query: () => {
-                    return { filters: { name: ['in', pickup_requests], docstatus: 1 } };
-                }
-            }
-        ],
-        primary_action_label: __('Create Payment'),
-        primary_action: function() {
-            let selected = dialog.get_value('pickup_request'); // single value
-            dialog.hide();
-            if (selected) {
-                create_payment_with_pickup_amount(frm, selected);
-            }
-        }
-    });
+//     let dialog = new frappe.ui.Dialog({
+//         title: __('Select Pickup Request for Payment'),
+//         fields: [
+//             {
+//                 fieldname: 'pickup_request',
+//                 fieldtype: 'Link',
+//                 options: 'Pickup Request',
+//                 label: __('Pickup Request'),
+//                 reqd: 1,
+//                 get_query: () => {
+//                     return { filters: { name: ['in', pickup_requests], docstatus: 1 } };
+//                 }
+//             }
+//         ],
+//         primary_action_label: __('Create Payment'),
+//         primary_action: function() {
+//             let selected = dialog.get_value('pickup_request'); // single value
+//             dialog.hide();
+//             if (selected) {
+//                 create_payment_with_pickup_amount(frm, selected);
+//             }
+//         }
+//     });
 
-    dialog.show();
-}
+//     dialog.show();
+// }
 
-function create_payment_with_pickup_amount(frm, selected_pickup_request) {
-    frappe.call({
-        method: "import.config.py.purchase_order.prepare_payment_entry",
-        args: {
-            dt: frm.doc.doctype,
-            dn: frm.doc.name,
-            pickup_request: selected_pickup_request
-        },
-        callback: function(r) {
-            if (r.message) {
-                let payment_entry = frappe.model.sync(r.message)[0];
-                payment_entry.custom_pickup_request = selected_pickup_request;
-                frappe.set_route('Form', 'Payment Entry', payment_entry.name);
-            }
-        }
-    });
-}
+// function create_payment_with_pickup_amount(frm, selected_pickup_request) {
+//     frappe.call({
+//         method: "import.config.py.purchase_order.prepare_payment_entry",
+//         args: {
+//             dt: frm.doc.doctype,
+//             dn: frm.doc.name,
+//             pickup_request: selected_pickup_request
+//         },
+//         callback: function(r) {
+//             if (r.message) {
+//                 let payment_entry = frappe.model.sync(r.message)[0];
+//                 payment_entry.custom_pickup_request = selected_pickup_request;
+//                 frappe.set_route('Form', 'Payment Entry', payment_entry.name);
+//             }
+//         }
+//     });
+// }
 
 
 function add_conditional_buttons(frm) {
