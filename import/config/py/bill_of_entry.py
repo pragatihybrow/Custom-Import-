@@ -22,7 +22,7 @@ def update_payment_request(doc, method):
             frappe.db.set_value("Payment Entry", pr.name, "custom_boe_date", doc.boe_date)
             frappe.db.set_value("Payment Entry", pr.name, "custom_bcd", doc.bcd_amount)
             frappe.db.set_value("Payment Entry", pr.name, "custom_igst", doc.igst_amount)
-            # frappe.db.set_value("Payment Entry", pr.name, "custom_deferred_duty_amt",doc.bcd_amount )
+            frappe.db.set_value("Payment Entry", pr.name, "custom_cha",doc.cha )
             frappe.db.set_value("Payment Entry", pr.name, "custom_total", (doc.igst_amount + doc.bcd_amount))
             frappe.db.set_value("Payment Entry", pr.name, "custom_assessable_value",doc.accessible_value )
             frappe.db.set_value("Payment Entry", pr.name, "custom_health_cess",doc.h_cess_amount )

@@ -166,8 +166,11 @@
    "allow_on_submit": 1,
    "fieldname": "cha",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "CHA",
-   "options": "Supplier"
+   "link_filters": "[[\"Supplier\",\"supplier_group\",\"=\",\"CHA\"]]",
+   "options": "Supplier",
+   "reqd": 1
   },
   {
    "allow_on_submit": 1,
@@ -407,7 +410,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-10-03 11:40:30.645668",
+ "modified": "2025-10-10 12:09:02.753134",
  "modified_by": "Administrator",
  "module": "Import",
  "name": "Pre Alert",

@@ -185,3 +185,149 @@ function updateChargesHtml(frm, cdt, cdn) {
     }
 }
 
+
+
+
+frappe.ui.form.on('Request for Quotation', {
+    refresh: function(frm) {
+        // Hide default Supplier Quotation button for Logistics type
+        if (frm.doc.custom_type === 'Logistics' && frm.doc.docstatus === 1) {
+            // Remove the default "Supplier Quotation" button
+            frm.remove_custom_button('Supplier Quotation', 'Create');
+            
+            // Add custom button for Logistics Supplier Quotation
+            frm.add_custom_button(__('Create Logistics Supplier Quotation'), function() {
+                create_Logistics_supplier_quotation(frm);
+            }, __('Create'));
+        }
+    }
+});
+
+function create_Logistics_supplier_quotation(frm) {
+    // Get the first supplier from RFQ suppliers table
+    if (!frm.doc.suppliers || frm.doc.suppliers.length === 0) {
+        frappe.msgprint(__('Please add at least one supplier to create Supplier Quotation'));
+        return;
+    }
+    
+    // Show dialog to select supplier
+    let supplier_list = frm.doc.suppliers.map(d => d.supplier);
+    
+    let d = new frappe.ui.Dialog({
+        title: __('Select Supplier'),
+        fields: [
+            {
+                fieldname: 'supplier',
+                fieldtype: 'Select',
+                label: __('Supplier'),
+                options: supplier_list,
+                reqd: 1
+            }
+        ],
+        primary_action_label: __('Create'),
+        primary_action(values) {
+            d.hide();
+            create_supplier_quotation(frm, values.supplier);
+        }
+    });
+    
+    d.show();
+}
+
+function create_supplier_quotation(frm, supplier) {
+    frappe.call({
+        method: 'frappe.client.get',
+        args: {
+            doctype: 'Item',
+            filters: {
+                item_group: 'Services',
+                item_name: ['like', '%Transport%']
+            },
+            fields: ['name', 'stock_uom']
+        },
+        callback: function(r) {
+            let transport_item = null;
+            let transport_uom = null;
+            
+            if (r.message) {
+                transport_item = r.message.name;
+                transport_uom = r.message.stock_uom;
+                create_sq_doc(frm, supplier, transport_item, transport_uom);
+            } else {
+                // If no transport item found, search more broadly
+                frappe.call({
+                    method: 'frappe.client.get_list',
+                    args: {
+                        doctype: 'Item',
+                        filters: {
+                            item_group: 'Services'
+                        },
+                        fields: ['name', 'stock_uom'],
+                        limit: 1
+                    },
+                    callback: function(res) {
+                        if (res.message && res.message.length > 0) {
+                            transport_item = res.message[0].name;
+                            transport_uom = res.message[0].stock_uom;
+                            create_sq_doc(frm, supplier, transport_item, transport_uom);
+                        } else {
+                            frappe.msgprint(__('Please create a Transport Item with Service Item Group first'));
+                        }
+                    }
+                });
+                return;
+            }
+        }
+    });
+}
+
+function create_sq_doc(frm, supplier, transport_item, transport_uom) {
+    frappe.model.with_doctype('Supplier Quotation', function() {
+        let sq = frappe.model.get_new_doc('Supplier Quotation');
+        
+        // Set basic fields
+        sq.supplier = supplier;
+        sq.transaction_date = frappe.datetime.get_today();
+        sq.custom_type = 'Logistics';
+        
+        // Link to RFQ and copy pickup request
+        sq.custom_request_for_quotation = frm.doc.name;
+        sq.custom_pickup_request = frm.doc.custom_pickup_request;
+        
+        // Add Transport Item to items child table
+        if (transport_item) {
+            let item_row = frappe.model.add_child(sq, 'items');
+            item_row.item_code = transport_item;
+            item_row.qty = 1;
+            item_row.uom = transport_uom || 'Nos';
+            item_row.schedule_date = frappe.datetime.add_days(frappe.datetime.get_today(), 7);
+            item_row.request_for_quotation = frm.doc.name;
+        }
+        
+        // Copy RFQ items to custom_pickup_details child table
+        if (frm.doc.items && frm.doc.items.length > 0) {
+            frm.doc.items.forEach(function(item) {
+                let pickup_row = frappe.model.add_child(sq, 'custom_pickup_details');
+                
+                // Map fields from RFQ items to pickup details
+                pickup_row.pickup_request = frm.doc.custom_pickup_request;
+                pickup_row.item_code = item.item_code;
+                pickup_row.item_name = item.item_name;
+                pickup_row.pick_quantity = item.qty || 0;
+                
+                // Add any other custom fields you need to copy
+                // pickup_row.description = item.description;
+                // pickup_row.uom = item.uom;
+                // pickup_row.warehouse = item.warehouse;
+            });
+        }
+        
+        // Open the new Supplier Quotation
+        frappe.set_route('Form', 'Supplier Quotation', sq.name);
+        
+        frappe.show_alert({
+            message: __('Logistics Supplier Quotation created successfully'),
+            indicator: 'green'
+        }, 5);
+    });
+}

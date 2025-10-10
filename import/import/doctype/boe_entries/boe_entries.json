@@ -22,32 +22,29 @@
    "fieldname": "po_number",
    "fieldtype": "Link",
    "in_list_view": 1,
-   "label": "Pre Alert",
-   "options": "Pre Alert"
+   "label": "Purchase Order",
+   "options": "Purchase Order"
   },
   {
-   "fetch_from": "po_number.total_inr_val",
    "fieldname": "total_inr_value",
    "fieldtype": "Float",
    "in_list_view": 1,
    "label": "Total INR Value"
   },
   {
-   "fetch_from": "po_number.tot_rodt_ut",
    "fieldname": "total_rodtep",
    "fieldtype": "Float",
    "in_list_view": 1,
    "label": "Total Rodtep"
   },
   {
-   "fetch_from": "po_number.total_duty",
    "fieldname": "total_duty",
    "fieldtype": "Float",
    "in_list_view": 1,
    "label": "Total Duty"
   },
   {
-   "fetch_from": "po_number.h_cess_amount",
+   "fetch_if_empty": 1,
    "fieldname": "total_h_cess",
    "fieldtype": "Float",
    "in_list_view": 1,
@@ -65,21 +62,18 @@
    "label": "Total Qty"
   },
   {
-   "fetch_from": "po_number.bcd_amount",
    "fieldname": "total_bcd",
    "fieldtype": "Float",
    "in_list_view": 1,
    "label": "Total BCD"
   },
   {
-   "fetch_from": "po_number.igst_amount",
    "fieldname": "total_gst",
    "fieldtype": "Float",
    "in_list_view": 1,
    "label": "Total GST"
   },
   {
-   "fetch_from": "po_number.sws_amount",
    "fieldname": "total_sws",
    "fieldtype": "Float",
    "label": "Total SWS"
@@ -89,8 +83,8 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-09-18 13:08:09.355642",
- "modified_by": "pragati@gmail.com",
+ "modified": "2025-10-10 14:26:38.089203",
+ "modified_by": "Administrator",
  "module": "Import",
  "name": "BOE Entries",
  "owner": "pragati@gmail.com",

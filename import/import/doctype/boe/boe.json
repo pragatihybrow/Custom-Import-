@@ -17,6 +17,8 @@
   "vendor",
   "exchange_rate",
   "column_break_nsct",
+  "pre_alert",
+  "cha",
   "section_break_kvfb",
   "boe_entries",
   "section_break_gfaf",
@@ -72,7 +74,6 @@
    "fieldtype": "Column Break"
   },
   {
-   "fetch_from": "pre_alert.pickup_request",
    "fieldname": "pickup_request",
    "fieldtype": "Link",
    "label": "Pickup Request",
@@ -173,10 +174,11 @@
    "options": "Company:company:default_currency"
   },
   {
+   "fetch_from": "pre_alert.payment_type",
    "fieldname": "payment_type",
    "fieldtype": "Select",
    "label": "Payment Type",
-   "options": "\nDeferred Payment"
+   "options": "\nDEFFERED PAYMENT\nTRANSATIONAL PAYMENT"
   },
   {
    "fieldname": "column_break_jxak",
@@ -259,14 +261,28 @@
    "print_hide": 1,
    "read_only": 1,
    "search_index": 1
+  },
+  {
+   "fieldname": "pre_alert",
+   "fieldtype": "Link",
+   "label": "Pre Alert",
+   "options": "Pre Alert"
+  },
+  {
+   "fetch_from": "pre_alert.cha",
+   "fieldname": "cha",
+   "fieldtype": "Link",
+   "label": "CHA",
+   "options": "Supplier",
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-09-18 13:09:52.820550",
- "modified_by": "pragati@gmail.com",
+ "modified": "2025-10-10 14:49:29.285748",
+ "modified_by": "Administrator",
  "module": "Import",
  "name": "BOE",
  "naming_rule": "By \"Naming Series\" field",

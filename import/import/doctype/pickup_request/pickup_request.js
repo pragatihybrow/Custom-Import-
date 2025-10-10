@@ -230,12 +230,14 @@ action: async function (selections) {
 
                 // ✅ Add PO items
                 r.message.items.forEach(item => {
+                    let remaining_qty = item.qty - (item.custom_pick_qty || 0);
                     let item_row = frm.add_child("purchase_order_details");
                     item_row.item = item.item_code;
                     item_row.material = item.item_name;
                     item_row.quantity = item.qty;
                     item_row.material_desc = item.description;
-                    item_row.pick_qty = item.qty;
+                    item_row.pick_qty = remaining_qty,
+                    // item_row.pick_qty = item.qty;
                     item_row.po_number = item.parent;
                     item_row.currency = r.message.currency;
                     item_row.currency_rate = r.message.conversion_rate;
