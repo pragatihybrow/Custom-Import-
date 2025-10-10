@@ -140,14 +140,148 @@ frappe.ui.form.on('Pickup Request', {
             }
         });
 
+// frm.add_custom_button("Purchase Order", function () {
+//     let d = new frappe.ui.form.MultiSelectDialog({
+//         doctype: "Purchase Order",
+//         target: this.cur_frm,
+//         setters: {
+//             // transaction_date: null,
+//             // supplier: frm.doc.name_of_supplier,
+//             // custom_purchase_type: "Import", 
+//             custom_port_of_destination_pod : frm.doc.custom_port_of_destination_pod,
+//             custom_port_of_loading_pol : frm.doc.custom_port_of_loading_pol
+//         },
+//         add_filters_group: 1,
+//         date_field: 'transaction_date',
+//         columns: ['name', 'transaction_date', 'supplier', 'custom_purchase_sub_type'],
+//         get_query() {
+//             return {
+//                 filters: {
+//                     docstatus: ['!=', 2],
+//                     custom_purchase_sub_type: 'Import',
+//                     custom_pickup_status: ['!=', 'Fully Picked']
+//                 }
+//             };
+//         },
+// action: async function (selections) {
+//     d.dialog.hide();
+
+//     let suppliers_set = new Set((frm.doc.name_of_supplier || []).map(row => row.supplier));
+//     let existing_po_set = new Set((frm.doc.po_no || []).map(row => row.purchase_order));
+//     let existing_po_list_set = new Set((frm.doc.purchase_order_list || []).map(row => row.po_number));
+
+//     for (const po_name of selections) {
+//         await frappe.call({
+//             method: "import.import.doctype.pickup_request.pickup_request.get_po_all_details",
+//             args: { po_name },
+//             callback: function (r) {
+//                 if (!r.message) return;
+
+//                 let po_id = r.message.name;
+//                 let supplier_id = r.message.supplier;
+
+//                 // ✅ Validate port_of_loading_pol
+//                 if (frm.doc.port_of_loading_pol && frm.doc.port_of_loading_pol !== r.message.custom_port_of_loading_pol) {
+//                     frappe.msgprint({
+//                         title: "Port of Loading Mismatch",
+//                         message: `Purchase Order ${po_id} has a different Port of Loading (${r.message.custom_port_of_loading_pol}) than the Pickup Request (${frm.doc.port_of_loading_pol}).`,
+//                         indicator: "red"
+//                     });
+//                     return; // ❌ Skip this PO
+//                 }
+
+//                 // ✅ Validate port_of_destination_pod
+//                 if (frm.doc.port_of_destination_pod && frm.doc.port_of_destination_pod !== r.message.custom_port_of_destination_pod) {
+//                     frappe.msgprint({
+//                         title: "Port of Destination Mismatch",
+//                         message: `Purchase Order ${po_id} has a different Port of Destination (${r.message.custom_port_of_destination_pod}) than the Pickup Request (${frm.doc.port_of_destination_pod}).`,
+//                         indicator: "red"
+//                     });
+//                     return; // ❌ Skip this PO
+//                 }
+
+//                 // ✅ Add supplier (no duplicates)
+//                 if (!suppliers_set.has(supplier_id)) {
+//                     suppliers_set.add(supplier_id);
+//                     let supplier_row = frm.add_child("name_of_supplier");
+//                     supplier_row.supplier = supplier_id;
+//                 }
+
+//                 // ✅ Add PO number (no duplicates)
+//                 if (!existing_po_set.has(po_id)) {
+//                     existing_po_set.add(po_id);
+//                     let po_row = frm.add_child("po_no");
+//                     po_row.purchase_order = po_id;
+//                 }
+
+//                 // ✅ Add to purchase_order_list (no duplicates)
+//                 if (!existing_po_list_set.has(po_id)) {
+//                     existing_po_list_set.add(po_id);
+//                     let row = frm.add_child("purchase_order_list");
+//                     row.po_number = po_id;
+//                     row.document_date = r.message.transaction_date;
+//                     row.po_type = r.message.custom_purchase_type;
+//                     row.vendor = supplier_id;
+//                     row.vendor_name = r.message.supplier_name;
+//                     row.currency = r.message.currency;
+//                     row.company = r.message.company;
+//                     row.exchange_rate = r.message.conversion_rate;
+//                 }
+
+//                 // ✅ Add PO items
+//                 r.message.items.forEach(item => {
+//                     let remaining_qty = item.qty - (item.custom_pick_qty || 0);
+//                     let item_row = frm.add_child("purchase_order_details");
+//                     item_row.item = item.item_code;
+//                     item_row.material = item.item_name;
+//                     item_row.quantity = item.qty;
+//                     item_row.material_desc = item.description;
+//                     item_row.pick_qty = remaining_qty,
+//                     // item_row.pick_qty = item.qty;
+//                     item_row.po_number = item.parent;
+//                     item_row.currency = r.message.currency;
+//                     item_row.currency_rate = r.message.conversion_rate;
+//                     item_row.rate = item.rate;
+//                     item_row.amount = item.amount;
+//                     item_row.amount_in_inr = item.base_amount;
+//                 });
+
+//                 // ✅ Set main form fields (only if not set already)
+//                 if (!frm.doc.port_of_loading_pol) {
+//                     frm.set_value("port_of_loading_pol", r.message.custom_port_of_loading_pol);
+//                 }
+//                 if (!frm.doc.port_of_destination_pod) {
+//                     frm.set_value("port_of_destination_pod", r.message.custom_port_of_destination_pod);
+//                 }
+//                 frm.set_value("incoterm", r.message.incoterm);
+//                 frm.set_value("taxes_and_charges", r.message.taxes_and_charges);
+//                 frm.set_value("tax_category", r.message.tax_category);
+//                 frm.set_value("company_address", r.message.billing_address);
+
+//                 frm.refresh_field("purchase_order_list");
+//                 frm.refresh_field("purchase_order_details");
+//                 frm.refresh_field("name_of_supplier");
+//                 frm.refresh_field("po_no");
+//             }
+//         });
+//     }
+
+//     // ✅ Save the document after all selections processed
+//     setTimeout(() => {
+//         frm.save();
+//     }, 500);
+// }
+
+
+//     });
+//     d.dialog.show();
+// }, __("Get Items"));
+//     },
 frm.add_custom_button("Purchase Order", function () {
     let d = new frappe.ui.form.MultiSelectDialog({
         doctype: "Purchase Order",
         target: this.cur_frm,
         setters: {
-            // transaction_date: null,
-            // supplier: frm.doc.name_of_supplier,
-            // custom_purchase_type: "Import", 
             custom_port_of_destination_pod : frm.doc.custom_port_of_destination_pod,
             custom_port_of_loading_pol : frm.doc.custom_port_of_loading_pol
         },
@@ -163,41 +297,88 @@ frm.add_custom_button("Purchase Order", function () {
                 }
             };
         },
-action: async function (selections) {
-    d.dialog.hide();
+        action: async function (selections) {
+            d.dialog.hide();
 
-    let suppliers_set = new Set((frm.doc.name_of_supplier || []).map(row => row.supplier));
-    let existing_po_set = new Set((frm.doc.po_no || []).map(row => row.purchase_order));
-    let existing_po_list_set = new Set((frm.doc.purchase_order_list || []).map(row => row.po_number));
+            let suppliers_set = new Set((frm.doc.name_of_supplier || []).map(row => row.supplier));
+            let existing_po_set = new Set((frm.doc.po_no || []).map(row => row.purchase_order));
+            let existing_po_list_set = new Set((frm.doc.purchase_order_list || []).map(row => row.po_number));
+            
+            // ✅ Track currencies from selected POs
+            let currencies_set = new Set();
+            let po_details_map = new Map();
 
-    for (const po_name of selections) {
-        await frappe.call({
-            method: "import.import.doctype.pickup_request.pickup_request.get_po_all_details",
-            args: { po_name },
-            callback: function (r) {
-                if (!r.message) return;
+            // First pass: Collect all PO details and check currencies
+            for (const po_name of selections) {
+                await frappe.call({
+                    method: "import.import.doctype.pickup_request.pickup_request.get_po_all_details",
+                    args: { po_name },
+                    async: false,
+                    callback: function (r) {
+                        if (r.message) {
+                            po_details_map.set(po_name, r.message);
+                            currencies_set.add(r.message.currency);
+                        }
+                    }
+                });
+            }
 
-                let po_id = r.message.name;
-                let supplier_id = r.message.supplier;
+            // ✅ Check if multiple currencies exist
+            let has_multiple_currencies = currencies_set.size > 1;
+            
+            // ✅ Hide/Show currency-related fields based on multiple currencies
+            if (has_multiple_currencies) {
+                // Hide supplier currency fields
+                frm.set_df_property('total', 'hidden', 1);
+                frm.set_df_property('grand_total', 'hidden', 1);
+                
+                // Show INR fields (if they exist)
+                if (frm.fields_dict.base_total) {
+                    frm.set_df_property('base_total', 'hidden', 0);
+                }
+                if (frm.fields_dict.base_grand_total) {
+                    frm.set_df_property('base_grand_total', 'hidden', 0);
+                }
+            } else {
+                // Show supplier currency fields
+                frm.set_df_property('total', 'hidden', 0);
+                frm.set_df_property('grand_total', 'hidden', 0);
+                
+                // Optionally hide base fields if they exist
+                if (frm.fields_dict.base_total) {
+                    frm.set_df_property('base_total', 'hidden', 0);
+                }
+                if (frm.fields_dict.base_grand_total) {
+                    frm.set_df_property('base_grand_total', 'hidden', 0);
+                }
+            }
+
+            // Second pass: Process all POs
+            for (const po_name of selections) {
+                let r_message = po_details_map.get(po_name);
+                if (!r_message) continue;
+
+                let po_id = r_message.name;
+                let supplier_id = r_message.supplier;
 
                 // ✅ Validate port_of_loading_pol
-                if (frm.doc.port_of_loading_pol && frm.doc.port_of_loading_pol !== r.message.custom_port_of_loading_pol) {
+                if (frm.doc.port_of_loading_pol && frm.doc.port_of_loading_pol !== r_message.custom_port_of_loading_pol) {
                     frappe.msgprint({
                         title: "Port of Loading Mismatch",
-                        message: `Purchase Order ${po_id} has a different Port of Loading (${r.message.custom_port_of_loading_pol}) than the Pickup Request (${frm.doc.port_of_loading_pol}).`,
+                        message: `Purchase Order ${po_id} has a different Port of Loading (${r_message.custom_port_of_loading_pol}) than the Pickup Request (${frm.doc.port_of_loading_pol}).`,
                         indicator: "red"
                     });
-                    return; // ❌ Skip this PO
+                    continue;
                 }
 
                 // ✅ Validate port_of_destination_pod
-                if (frm.doc.port_of_destination_pod && frm.doc.port_of_destination_pod !== r.message.custom_port_of_destination_pod) {
+                if (frm.doc.port_of_destination_pod && frm.doc.port_of_destination_pod !== r_message.custom_port_of_destination_pod) {
                     frappe.msgprint({
                         title: "Port of Destination Mismatch",
-                        message: `Purchase Order ${po_id} has a different Port of Destination (${r.message.custom_port_of_destination_pod}) than the Pickup Request (${frm.doc.port_of_destination_pod}).`,
+                        message: `Purchase Order ${po_id} has a different Port of Destination (${r_message.custom_port_of_destination_pod}) than the Pickup Request (${frm.doc.port_of_destination_pod}).`,
                         indicator: "red"
                     });
-                    return; // ❌ Skip this PO
+                    continue;
                 }
 
                 // ✅ Add supplier (no duplicates)
@@ -219,28 +400,27 @@ action: async function (selections) {
                     existing_po_list_set.add(po_id);
                     let row = frm.add_child("purchase_order_list");
                     row.po_number = po_id;
-                    row.document_date = r.message.transaction_date;
-                    row.po_type = r.message.custom_purchase_type;
+                    row.document_date = r_message.transaction_date;
+                    row.po_type = r_message.custom_purchase_type;
                     row.vendor = supplier_id;
-                    row.vendor_name = r.message.supplier_name;
-                    row.currency = r.message.currency;
-                    row.company = r.message.company;
-                    row.exchange_rate = r.message.conversion_rate;
+                    row.vendor_name = r_message.supplier_name;
+                    row.currency = r_message.currency;
+                    row.company = r_message.company;
+                    row.exchange_rate = r_message.conversion_rate;
                 }
 
                 // ✅ Add PO items
-                r.message.items.forEach(item => {
+                r_message.items.forEach(item => {
                     let remaining_qty = item.qty - (item.custom_pick_qty || 0);
                     let item_row = frm.add_child("purchase_order_details");
                     item_row.item = item.item_code;
                     item_row.material = item.item_name;
                     item_row.quantity = item.qty;
                     item_row.material_desc = item.description;
-                    item_row.pick_qty = remaining_qty,
-                    // item_row.pick_qty = item.qty;
+                    item_row.pick_qty = remaining_qty;
                     item_row.po_number = item.parent;
-                    item_row.currency = r.message.currency;
-                    item_row.currency_rate = r.message.conversion_rate;
+                    item_row.currency = r_message.currency;
+                    item_row.currency_rate = r_message.conversion_rate;
                     item_row.rate = item.rate;
                     item_row.amount = item.amount;
                     item_row.amount_in_inr = item.base_amount;
@@ -248,34 +428,43 @@ action: async function (selections) {
 
                 // ✅ Set main form fields (only if not set already)
                 if (!frm.doc.port_of_loading_pol) {
-                    frm.set_value("port_of_loading_pol", r.message.custom_port_of_loading_pol);
+                    frm.set_value("port_of_loading_pol", r_message.custom_port_of_loading_pol);
                 }
                 if (!frm.doc.port_of_destination_pod) {
-                    frm.set_value("port_of_destination_pod", r.message.custom_port_of_destination_pod);
+                    frm.set_value("port_of_destination_pod", r_message.custom_port_of_destination_pod);
                 }
-                frm.set_value("incoterm", r.message.incoterm);
-                frm.set_value("taxes_and_charges", r.message.taxes_and_charges);
-                frm.set_value("tax_category", r.message.tax_category);
-                frm.set_value("company_address", r.message.billing_address);
+                
+                // ✅ Set other fields only if they exist
+                if (frm.fields_dict.incoterm) {
+                    frm.set_value("incoterm", r_message.incoterm);
+                }
+                if (frm.fields_dict.taxes_and_charges) {
+                    frm.set_value("taxes_and_charges", r_message.taxes_and_charges);
+                }
+                if (frm.fields_dict.tax_category) {
+                    frm.set_value("tax_category", r_message.tax_category);
+                }
+                if (frm.fields_dict.company_address && r_message.billing_address) {
+                    frm.set_value("company_address", r_message.billing_address);
+                }
 
                 frm.refresh_field("purchase_order_list");
                 frm.refresh_field("purchase_order_details");
                 frm.refresh_field("name_of_supplier");
                 frm.refresh_field("po_no");
             }
-        });
-    }
+            
+            // ✅ Refresh the form to show/hide fields properly
+            frm.refresh_fields();
 
-    // ✅ Save the document after all selections processed
-    setTimeout(() => {
-        frm.save();
-    }, 500);
-}
-
-
+            // ✅ Save the document after all selections processed
+            setTimeout(() => {
+                frm.save();
+            }, 500);
+        }
     });
     d.dialog.show();
-}, __("Get Items"));
+}, __("Get Items"))
     },
     
     supplier_address: function (frm) {

@@ -154,6 +154,7 @@
    "read_only": 1
   },
   {
+   "default": "MICRO CRISPR PRIVATE LIMITED",
    "fieldname": "company",
    "fieldtype": "Link",
    "label": "Company",
@@ -390,7 +391,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-10-01 11:38:44.331196",
+ "modified": "2025-10-10 17:29:20.274992",
  "modified_by": "Administrator",
  "module": "Import",
  "name": "Pickup Request",
