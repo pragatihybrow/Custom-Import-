@@ -689,3 +689,105 @@ def on_rfq_submit(doc, method=None):
             reference_name=doc.name,
             now=True,
         )
+
+
+import frappe
+from frappe import _
+from frappe.utils import get_url
+
+def on_workflow_state_change(doc, method):
+    """
+    Hook function to send email when Pickup Request workflow state changes
+    Trigger: on_update_after_submit or on_update
+    """
+    # Check if workflow state changed from "Open" to "In Progress"
+    if doc.has_value_changed("workflow_state"):
+        old_state = doc.get_doc_before_save().workflow_state if doc.get_doc_before_save() else None
+        new_state = doc.workflow_state
+        
+        if old_state == "Open" and new_state == "In Progress":
+            send_email_to_exim_user(doc)
+
+
+def send_email_to_exim_user(doc):
+    """
+    Send email notification to the custom EXIM user
+    """
+    try:
+        # Get the EXIM user email from the custom field
+        exim_user = doc.custom_exim_user
+        
+        if not exim_user:
+            frappe.log_error(
+                message=f"No EXIM user specified for Pickup Request {doc.name}",
+                title="Pickup Request Email Notification Error"
+            )
+            return
+        
+        # Get the user's email address
+        exim_user_email = frappe.db.get_value("User", exim_user, "email")
+        
+        if not exim_user_email:
+            frappe.log_error(
+                message=f"Email not found for user {exim_user}",
+                title="Pickup Request Email Notification Error"
+            )
+            return
+        
+        # Generate document link
+        doc_link = get_url(doc.get_url())
+        
+        # Prepare email subject
+        subject = _("Pickup Request {0} is now In Progress").format(doc.name)
+        
+        # Prepare email message
+        message = f"""
+        <p>Dear {frappe.db.get_value("User", exim_user, "full_name") or exim_user},</p>
+        
+        <p>The Pickup Request <strong>{doc.name}</strong> has been moved to <strong>In Progress</strong> status.</p>
+        
+        <p><strong>Document Details:</strong></p>
+        <ul>
+            <li><strong>Pickup Request:</strong> {doc.name}</li>
+            <li><strong>Status:</strong> In Progress</li>
+            <li><strong>Created On:</strong> {doc.creation}</li>
+        </ul>
+        
+        <p>You can view the document by clicking the link below:</p>
+        <p><a href="{doc_link}" style="background-color: #2490ef; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">View Pickup Request</a></p>
+        
+        <p>Best regards,<br>
+        {frappe.db.get_single_value("System Settings", "company") or "Your Company"}</p>
+        """
+        
+        # Send email
+        frappe.sendmail(
+            recipients=[exim_user_email],
+            subject=subject,
+            message=message,
+            reference_doctype=doc.doctype,
+            reference_name=doc.name,
+            delayed=False
+        )
+        
+        frappe.msgprint(
+            _("Email notification sent to {0}").format(exim_user_email),
+            indicator="green",
+            alert=True
+        )
+        
+    except Exception as e:
+        frappe.log_error(
+            message=frappe.get_traceback(),
+            title="Pickup Request Email Notification Error"
+        )
+        frappe.throw(_("Failed to send email notification: {0}").format(str(e)))
+
+
+# Alternative method using Workflow Action
+def send_email_on_workflow_action(doc, method):
+    """
+    Alternative implementation using workflow action
+    Can be called from Workflow Action in the workflow definition
+    """
+    send_email_to_exim_user(doc)

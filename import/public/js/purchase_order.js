@@ -122,7 +122,8 @@ function prepare_pickup_request_data(frm) {
         po_date: frm.doc.transaction_date,
         company_addrees: frm.doc.billing_address,
         tax_category: frm.doc.tax_category,
-        taxes_and_charges: frm.doc.taxes_and_charges
+        taxes_and_charges: frm.doc.taxes_and_charges,
+        exim_user:frm.doc.custom_exim_user
     };
 }
 
