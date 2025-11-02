@@ -43,28 +43,81 @@ def get_supplier_previously_data(item_code):
     return result
 
 
+# def on_rfq_submit(doc, method=None):
+#     """
+#     Send an email to each supplier on RFQ submit with a webform link pre-filled with RFQ and supplier.
+#     """
+#     base_url = get_url() 
+#     webform_base_url = f"{base_url}/supplier-quotation/new"
+
+#     for supplier_row in doc.suppliers:
+#         supplier = supplier_row.supplier
+#         email_id = supplier_row.email_id
+#         if not email_id:
+#             continue
+#         # Build webform link
+#         webform_link = f"{webform_base_url}?request_for_quotation={doc.name}&supplier={supplier}"
+#         subject = f"Request for Quotation {doc.name} - Submit Your Quotation"
+#         message = f"""
+#         Dear Supplier,<br><br>
+#         You are invited to submit your quotation for RFQ <b>{doc.name}</b>.<br>
+#         Please use the following link to submit your quotation:<br><br>
+#         <a href='{webform_link}' target='_blank'>Submit Quotation (Web Form)</a><br><br>
+#         Thank you.<br>
+#         """
+#         frappe.sendmail(
+#             recipients=[email_id],
+#             subject=subject,
+#             message=message,
+#             reference_doctype=doc.doctype,
+#             reference_name=doc.name,
+#             now=True,
+#         )
+
 def on_rfq_submit(doc, method=None):
     """
-    Send an email to each supplier on RFQ submit with a webform link pre-filled with RFQ and supplier.
+    Send an email to each supplier on RFQ submit with Pickup Request details
+    fetched from the linked Pickup Request document.
     """
-    base_url = get_url() 
-    webform_base_url = f"{base_url}/supplier-quotation/new"
+    # Get Pickup Request document linked in RFQ
+    pickup_request = None
+    if doc.custom_pickup_request:
+        pickup_request = frappe.get_doc("Pickup Request", doc.custom_pickup_request)
 
     for supplier_row in doc.suppliers:
         supplier = supplier_row.supplier
         email_id = supplier_row.email_id
         if not email_id:
             continue
-        # Build webform link
-        webform_link = f"{webform_base_url}?request_for_quotation={doc.name}&supplier={supplier}"
+
         subject = f"Request for Quotation {doc.name} - Submit Your Quotation"
+
+        # Use pickup_request fields if available
         message = f"""
-        Dear Supplier,<br><br>
-        You are invited to submit your quotation for RFQ <b>{doc.name}</b>.<br>
-        Please use the following link to submit your quotation:<br><br>
-        <a href='{webform_link}' target='_blank'>Submit Quotation (Web Form)</a><br><br>
-        Thank you.<br>
+        <p>Dear {supplier},</p>
+        <p>With reference to RFQ <b>{doc.name}</b>, you are invited to submit your quotation. 
+        Please find below the shipment details for your reference.</p>
+
+        <table border="1" cellpadding="6" cellspacing="0"
+            style="border-collapse:collapse; width:100%; font-family:Arial; font-size:13px;">
+            <tr><td><b>Pickup Reference Number:</b></td><td>{pickup_request.name if pickup_request else ''}</td></tr>
+            <tr><td><b>Origin Country:</b></td><td>{pickup_request.country_origin if pickup_request else ''}</td></tr>
+            <tr><td><b>Port of Loading (POL):</b></td><td>{pickup_request.port_of_loading_pol if pickup_request else ''}</td></tr>
+            <tr><td><b>Port of Destination (POD):</b></td><td>{pickup_request.port_of_destination_pod if pickup_request else ''}</td></tr>
+            <tr><td><b>Shipment Mode:</b></td><td>{pickup_request.type_of_shipments if pickup_request else ''}</td></tr>
+            <tr><td><b>Expected Pickup Date:</b></td><td>{frappe.format(pickup_request.pickup_date_by, {'fieldtype': 'Date'}) if pickup_request and pickup_request.pickup_date_by else ''}</td></tr>
+            <tr><td><b>Number of Packages:</b></td><td>{pickup_request.no_of_package if pickup_request else ''}</td></tr>
+            <tr><td><b>Gross Weight:</b></td><td>{pickup_request.gross_weight if pickup_request else ''} Kg</td></tr>
+            <tr><td><b>Dimensions (L*W*H):</b></td><td>{pickup_request.dimensions if pickup_request else ''}</td></tr>
+            <tr><td><b>Product Category:</b></td><td>{pickup_request.type_of_cargo if pickup_request else ''}</td></tr>
+            <tr><td><b>Shipment Value:</b></td><td>{frappe.utils.fmt_money(pickup_request.shipment_value, currency=pickup_request.currency) if pickup_request else ''}</td></tr>
+            <tr><td><b>Incoterm:</b></td><td>{pickup_request.incoterm if pickup_request else ''}</td></tr>
+        </table>
+
+        <br>
+        <p>Thank you,<br>{frappe.session.user}</p>
         """
+
         frappe.sendmail(
             recipients=[email_id],
             subject=subject,
