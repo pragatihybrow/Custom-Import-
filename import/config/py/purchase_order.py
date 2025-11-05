@@ -115,101 +115,57 @@ def get_mr_item_fields(mr_item_name):
         as_dict=True
     )
 
-# ------------------- PAYMENT ENTRY -------------------
-
-# @frappe.whitelist()
-# def create_payment_entry_from_po(po_name):
-#     return get_payment_entry("Purchase Order", po_name)
-
-
 
 # import frappe
-# from frappe.utils import flt, cint
-# from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
+# from frappe.utils import flt
 
 # @frappe.whitelist()
-# def prepare_payment_entry(dt, dn, party_amount=None, bank_account=None, pickup_request=None):
-#     """
-#     Fixed version of payment entry preparation with proper currency handling
-#     """
-#     # Validate inputs
-#     if not dt or not dn:
-#         frappe.throw("Document Type and Document Name are required")
-    
-#     # Get purchase order document
-#     try:
-#         po = frappe.get_doc(dt, dn)
-#     except Exception as e:
-#         frappe.throw(f"Could not fetch {dt} {dn}: {str(e)}")
-    
-#     # Get pickup request if provided
-#     pr = None
-#     if pickup_request:
-#         try:
-#             pr = frappe.get_doc("Pickup Request", pickup_request)
-#         except Exception as e:
-#             frappe.throw(f"Could not fetch Pickup Request {pickup_request}: {str(e)}")
-    
-#     # Calculate amount to pay in FOREIGN CURRENCY (USD)
-#     amount_to_pay = 0
-    
-#     if pickup_request:
-#         # Get amount from pickup request details in foreign currency
-#         amount_result = frappe.db.sql("""
-#             SELECT SUM(amount) as total_amount_usd
-#             FROM `tabPurchase Order Details`
-#             WHERE po_number = %s
-#               AND parent = %s
-#         """, (po.name, pickup_request), as_dict=True)
-        
-#         amount_to_pay = flt(amount_result[0].total_amount_usd) if amount_result and amount_result[0].total_amount_usd else 0
-    
-#     # Fallback to PO amounts
-#     if not amount_to_pay:
-#         if party_amount:
-#             amount_to_pay = flt(party_amount)
-#         else:
-#             # Use the foreign currency amount (grand_total in USD)
-#             amount_to_pay = flt(po.grand_total)
-    
-#     # Create payment entry with the foreign currency amount
-#     try:
-#         payment_entry_doc = get_payment_entry(dt, dn, 
-#                                             party_amount=amount_to_pay, 
-#                                             bank_account=bank_account)
-        
-#         # Fix the amounts and exchange rates
-#         if payment_entry_doc:
-#             # Ensure we're using the correct foreign currency amount
-#             payment_entry_doc.received_amount = amount_to_pay
-#             payment_entry_doc.target_exchange_rate = flt(po.conversion_rate)
-            
-#             # Recalculate base amounts
-#             payment_entry_doc.base_received_amount = flt(amount_to_pay * po.conversion_rate)
-#             payment_entry_doc.paid_amount = flt(amount_to_pay * po.conversion_rate + po.rounding_adjustment)
-#             payment_entry_doc.base_paid_amount = flt(amount_to_pay * po.conversion_rate + po.base_rounding_adjustment)
-            
-#             # Update references
-#             if payment_entry_doc.references:
-#                 for ref in payment_entry_doc.references:
-#                     if ref.reference_name == po.name:
-#                         ref.allocated_amount = flt(po.grand_total + po.rounding_adjustment )  
-#                         ref.outstanding_amount = flt(po.grand_total + po.rounding_adjustment)  
-#                         ref.total_amount = flt(po.grand_total + po.rounding_adjustment)  
-            
-#             # Set totals
-#             payment_entry_doc.total_allocated_amount = flt(po.grand_total + po.rounding_adjustment)
-#             payment_entry_doc.base_total_allocated_amount = flt(po.base_grand_total + po.base_rounding_adjustment)
-#             payment_entry_doc.unallocated_amount = 0
-#             payment_entry_doc.difference_amount = 0
-            
-#     except Exception as e:
-#         frappe.throw(f"Could not create payment entry: {str(e)}")
-    
-#     # Set custom fields
-#     if pickup_request:
-#         payment_entry_doc.custom_pickup_request = pickup_request
-#         payment_entry_doc.remarks = f"Payment for PO {po.name} (Pickup Request: {pickup_request})"
-    
-#     return payment_entry_doc
+# def create_custom_duty_journal_entry(purchase_order, duty_amount):
+#     po = frappe.get_doc("Purchase Order", purchase_order)
+#     duty_amount = flt(duty_amount)
 
+#     if duty_amount <= 0:
+#         frappe.throw("Please enter a valid Custom Duty Amount greater than zero.")
+
+#     # Validation
+#     if not (po.custom_pickup_status == "Fully Picked" and po.custom_pickup_request):
+#         frappe.throw("Journal Entry can only be created if Pickup Status is 'Fully Picked' and Pickup Request is present.")
+
+#     # Avoid duplicates
+#     existing_je = frappe.db.exists("Journal Entry", {"custom_purchase_order": po.name})
+#     if existing_je:
+#         frappe.throw(f"Journal Entry already exists for this Purchase Order: <b>{existing_je}</b>")
+
+#     # Create Journal Entry
+#     je = frappe.new_doc("Journal Entry")
+#     je.voucher_type = "Journal Entry"
+#     je.company = po.company
+#     je.posting_date = frappe.utils.nowdate()
+#     je.user_remark = f"Custom Duty Expense for Purchase Order {po.name}"
+#     je.custom_purchase_order = po.name
+
+#     # Define accounts (you can change these account names as per your chart)
+#     custom_duty_expense_account = "Custom Duty Expense - " + po.company_abbr
+#     custom_duty_payable_account = "Duties and Taxes - " + po.company_abbr
+
+#     # 🔸 Debit: Custom Duty Expense
+#     je.append("accounts", {
+#         "account": custom_duty_expense_account,
+#         "debit_in_account_currency": duty_amount,
+#         "credit_in_account_currency": 0
+#     })
+
+#     # 🔸 Credit: Custom Duty Payable
+#     je.append("accounts", {
+#         "account": custom_duty_payable_account,
+#         "credit_in_account_currency": duty_amount,
+#         "debit_in_account_currency": 0,
+#         "party_type": "Supplier",
+#         "party": po.supplier
+#     })
+
+#     je.insert(ignore_permissions=True)
+#     je.submit()
+
+#     frappe.msgprint(f"✅ Custom Duty Journal Entry {je.name} created successfully.")
+#     return je.name

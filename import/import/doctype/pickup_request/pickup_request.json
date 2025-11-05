@@ -397,8 +397,17 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
- "links": [],
- "modified": "2025-10-29 21:14:53.386018",
+ "links": [
+  {
+   "link_doctype": "Payment Requisition",
+   "link_fieldname": "pickup_request"
+  },
+  {
+   "link_doctype": "Request for Quotation",
+   "link_fieldname": "custom_pickup_request"
+  }
+ ],
+ "modified": "2025-11-05 14:05:31.697719",
  "modified_by": "Administrator",
  "module": "Import",
  "name": "Pickup Request",

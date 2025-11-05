@@ -1,5 +1,6 @@
 import frappe
 from frappe.utils import get_url
+from frappe.utils import get_url_to_form, fmt_money
 
 
 @frappe.whitelist()
@@ -83,6 +84,9 @@ def on_rfq_submit(doc, method=None):
     pickup_request = None
     if doc.custom_pickup_request:
         pickup_request = frappe.get_doc("Pickup Request", doc.custom_pickup_request)
+    
+    rfq_link = get_url_to_form(doc.doctype, doc.name)
+
 
     for supplier_row in doc.suppliers:
         supplier = supplier_row.supplier
@@ -92,6 +96,7 @@ def on_rfq_submit(doc, method=None):
 
         subject = f"Request for Quotation {doc.name} - Submit Your Quotation"
 
+
         # Use pickup_request fields if available
         message = f"""
         <p>Dear {supplier},</p>
@@ -99,7 +104,7 @@ def on_rfq_submit(doc, method=None):
         Please find below the shipment details for your reference.</p>
 
         <table border="1" cellpadding="6" cellspacing="0"
-            style="border-collapse:collapse; width:100%; font-family:Arial; font-size:13px;">
+            style="border-collapse:collapse; width:auto; font-family:Arial; font-size:13px;">
             <tr><td><b>Pickup Reference Number:</b></td><td>{pickup_request.name if pickup_request else ''}</td></tr>
             <tr><td><b>Origin Country:</b></td><td>{pickup_request.country_origin if pickup_request else ''}</td></tr>
             <tr><td><b>Port of Loading (POL):</b></td><td>{pickup_request.port_of_loading_pol if pickup_request else ''}</td></tr>
@@ -113,6 +118,7 @@ def on_rfq_submit(doc, method=None):
             <tr><td><b>Shipment Value:</b></td><td>{frappe.utils.fmt_money(pickup_request.shipment_value, currency=pickup_request.currency) if pickup_request else ''}</td></tr>
             <tr><td><b>Incoterm:</b></td><td>{pickup_request.incoterm if pickup_request else ''}</td></tr>
         </table>
+        <p><b>View RFQ Details:</b> <a href="{rfq_link}">{rfq_link}</a></p>
 
         <br>
         <p>Thank you,<br>{frappe.session.user}</p>

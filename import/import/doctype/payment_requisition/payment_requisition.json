@@ -1,0 +1,400 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "format:PRF/MCPL/{#################}",
+ "creation": "2025-11-04 20:35:16.444077",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_xo9s",
+  "amended_from",
+  "pickup_request",
+  "division",
+  "origin",
+  "mode_of_shipment",
+  "payment_by",
+  "po_wono",
+  "type_of_materials",
+  "supplier_name",
+  "duty_amount",
+  "rodtep_details",
+  "journal_entry",
+  "column_break_fixf",
+  "posting_date",
+  "company",
+  "favoring_of",
+  "consignment",
+  "payable_at",
+  "payment_required",
+  "po_wo_date",
+  "cha",
+  "job_no",
+  "duty_amount_in_word",
+  "specific_remark",
+  "bill_of_entry_created",
+  "section_break_oepz",
+  "attach_document",
+  "bill_of_entry_details_tab",
+  "assessable_value",
+  "deferred_duty_amt",
+  "cargo_type",
+  "boe_no",
+  "boe_date",
+  "deferred_duty",
+  "remarks",
+  "column_break_xdle",
+  "bcd",
+  "health_cess",
+  "sw_surcharge",
+  "igst",
+  "penalty",
+  "total",
+  "period",
+  "custom_duty_details_tab",
+  "challan_no",
+  "bank_name",
+  "date_of_payment",
+  "difference",
+  "column_break_vcxy",
+  "interest_amount",
+  "penalty_amount",
+  "tot_al",
+  "section_break_ynwx",
+  "approvalrejection_remark"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_xo9s",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Payment Requisition",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "division",
+   "fieldtype": "Select",
+   "label": "Division",
+   "options": "\nMICRO CRISPR PRIVATE LIMITED"
+  },
+  {
+   "fieldname": "posting_date",
+   "fieldtype": "Date",
+   "label": "Payment Requested Date"
+  },
+  {
+   "fieldname": "favoring_of",
+   "fieldtype": "Link",
+   "label": "Favoring Of",
+   "options": "Supplier"
+  },
+  {
+   "fieldname": "origin",
+   "fieldtype": "Link",
+   "label": "Origin",
+   "options": "Country"
+  },
+  {
+   "fieldname": "consignment",
+   "fieldtype": "Link",
+   "label": "Consignment",
+   "options": "Country"
+  },
+  {
+   "fieldname": "mode_of_shipment",
+   "fieldtype": "Link",
+   "label": "Mode of Shipment",
+   "options": "Mode of Shipment"
+  },
+  {
+   "fieldname": "payable_at",
+   "fieldtype": "Select",
+   "label": "Payable At"
+  },
+  {
+   "fieldname": "payment_by",
+   "fieldtype": "Link",
+   "label": "Payment By",
+   "options": "Mode of Payment"
+  },
+  {
+   "fieldname": "payment_required",
+   "fieldtype": "Select",
+   "label": "Payment Required",
+   "options": "\nIMMEDIATELY"
+  },
+  {
+   "fieldname": "po_wono",
+   "fieldtype": "Table MultiSelect",
+   "label": "P.O. W.O.No",
+   "options": "PO CT"
+  },
+  {
+   "fieldname": "po_wo_date",
+   "fieldtype": "Date",
+   "label": "P.O. W.O. Date"
+  },
+  {
+   "fieldname": "cha",
+   "fieldtype": "Link",
+   "label": "CHA",
+   "link_filters": "[[\"Supplier\",\"supplier_group\",\"=\",\"CHA\"]]",
+   "options": "Supplier"
+  },
+  {
+   "fieldname": "type_of_materials",
+   "fieldtype": "Select",
+   "label": "Type of Materials ",
+   "options": "\nRaw Material\nR & D\nCapex Item\nConsumable\nOther"
+  },
+  {
+   "fieldname": "supplier_name",
+   "fieldtype": "Table MultiSelect",
+   "label": "Supplier Name",
+   "options": "Supplier CT"
+  },
+  {
+   "fieldname": "duty_amount",
+   "fieldtype": "Float",
+   "label": "Duty Amount"
+  },
+  {
+   "fieldname": "job_no",
+   "fieldtype": "Data",
+   "label": "Job No"
+  },
+  {
+   "fieldname": "duty_amount_in_word",
+   "fieldtype": "Data",
+   "label": "Duty Amount in Word"
+  },
+  {
+   "fieldname": "rodtep_details",
+   "fieldtype": "Select",
+   "label": "RODTEP Details"
+  },
+  {
+   "fieldname": "specific_remark",
+   "fieldtype": "Data",
+   "label": "Specific Remark"
+  },
+  {
+   "fieldname": "bill_of_entry_details_tab",
+   "fieldtype": "Tab Break",
+   "label": "Bill Of Entry Details"
+  },
+  {
+   "fieldname": "assessable_value",
+   "fieldtype": "Float",
+   "label": "Assessable Value"
+  },
+  {
+   "fieldname": "deferred_duty_amt",
+   "fieldtype": "Float",
+   "label": "Deferred Duty Amt"
+  },
+  {
+   "fetch_from": "pickup_request.type_of_cargo",
+   "fieldname": "cargo_type",
+   "fieldtype": "Link",
+   "label": "Cargo Type",
+   "options": "Type Of Cargo"
+  },
+  {
+   "fieldname": "boe_no",
+   "fieldtype": "Link",
+   "label": "BOE No",
+   "options": "BOE"
+  },
+  {
+   "fieldname": "boe_date",
+   "fieldtype": "Date",
+   "label": "BOE Date"
+  },
+  {
+   "fieldname": "deferred_duty",
+   "fieldtype": "Float",
+   "label": "Deferred Duty"
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Data",
+   "label": "Remarks"
+  },
+  {
+   "fieldname": "period",
+   "fieldtype": "Select",
+   "label": "Period",
+   "options": "\n2025-26\n2026-27\n2027-28\n2028-29\n2029-30"
+  },
+  {
+   "fieldname": "column_break_xdle",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "bcd",
+   "fieldtype": "Float",
+   "label": "BCD"
+  },
+  {
+   "fieldname": "health_cess",
+   "fieldtype": "Float",
+   "label": "Health Cess"
+  },
+  {
+   "fieldname": "sw_surcharge",
+   "fieldtype": "Float",
+   "label": "SW Surcharge"
+  },
+  {
+   "fieldname": "igst",
+   "fieldtype": "Float",
+   "label": "IGST"
+  },
+  {
+   "fieldname": "penalty",
+   "fieldtype": "Float",
+   "label": "Penalty"
+  },
+  {
+   "fieldname": "total",
+   "fieldtype": "Float",
+   "label": "Total"
+  },
+  {
+   "fieldname": "custom_duty_details_tab",
+   "fieldtype": "Tab Break",
+   "label": "Custom Duty Details"
+  },
+  {
+   "fieldname": "challan_no",
+   "fieldtype": "Data",
+   "label": "Challan No"
+  },
+  {
+   "fieldname": "bank_name",
+   "fieldtype": "Link",
+   "label": "Bank Name",
+   "options": "Bank"
+  },
+  {
+   "fieldname": "date_of_payment",
+   "fieldtype": "Date",
+   "label": "Date of Payment"
+  },
+  {
+   "fieldname": "interest_amount",
+   "fieldtype": "Float",
+   "label": "Interest Amount"
+  },
+  {
+   "fieldname": "penalty_amount",
+   "fieldtype": "Float",
+   "label": "Penalty Amount"
+  },
+  {
+   "fieldname": "tot_al",
+   "fieldtype": "Float",
+   "label": "Total"
+  },
+  {
+   "fieldname": "difference",
+   "fieldtype": "Float",
+   "label": "Difference"
+  },
+  {
+   "fieldname": "approvalrejection_remark",
+   "fieldtype": "Small Text",
+   "label": "Approval/Rejection Remark"
+  },
+  {
+   "fieldname": "column_break_fixf",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "pickup_request",
+   "fieldtype": "Link",
+   "label": "Pickup Request",
+   "no_copy": 1,
+   "options": "Pickup Request",
+   "print_hide": 1
+  },
+  {
+   "fieldname": "section_break_oepz",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "attach_document",
+   "fieldtype": "Table",
+   "label": "Attach Document",
+   "options": "Attach Document"
+  },
+  {
+   "default": "0",
+   "fieldname": "bill_of_entry_created",
+   "fieldtype": "Check",
+   "label": "Bill Of Entry Created"
+  },
+  {
+   "fieldname": "column_break_vcxy",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_ynwx",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company"
+  },
+  {
+   "fieldname": "journal_entry",
+   "fieldtype": "Link",
+   "label": "Journal Entry",
+   "options": "Journal Entry",
+   "read_only": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [
+  {
+   "link_doctype": "Journal Entry",
+   "link_fieldname": "custom_payment_requisition"
+  }
+ ],
+ "modified": "2025-11-05 12:51:44.224680",
+ "modified_by": "Administrator",
+ "module": "Import",
+ "name": "Payment Requisition",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

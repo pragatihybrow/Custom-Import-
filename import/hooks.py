@@ -259,7 +259,9 @@ doctype_js = {
 
 override_doctype_dashboards = {
     "Purchase Order": "import.config.py.po_dashboard.get_dashboard_data",
-    "Pickup Request": "import.import.doctype.pickup_request.pickup_request.get_dashboard_data",
+    # "Pickup Request": "import.import.doctype.pickup_request.pickup_request.get_dashboard_data",
+    # "Payment Requisition": "import.import.doctype.payment_requisition.pr_dashboard.get_dashboard_data",
+
 }
 
 

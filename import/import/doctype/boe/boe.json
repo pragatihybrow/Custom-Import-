@@ -9,12 +9,12 @@
   "section_break_m9rs",
   "naming_series",
   "po_no",
-  "boe_date",
   "column_break_gvpd",
-  "pickup_request",
+  "vendor",
   "currency",
   "column_break_tqax",
-  "vendor",
+  "pickup_request",
+  "boe_date",
   "exchange_rate",
   "column_break_nsct",
   "pre_alert",
@@ -24,11 +24,12 @@
   "section_break_gfaf",
   "total_inr_value",
   "igst_amount",
-  "job_number",
+  "freight",
+  "approve_remark",
   "column_break_wuls",
   "accessible_value",
   "sws_amount",
-  "approve_remark",
+  "misc_charge",
   "column_break_zycy",
   "h_cess_amount",
   "total_rode_tape",
@@ -36,6 +37,7 @@
   "column_break_jxak",
   "bcd_amount",
   "total_duty",
+  "job_number",
   "section_break_dzvy",
   "penalty",
   "column_break_bryi",
@@ -60,9 +62,9 @@
   },
   {
    "fieldname": "po_no",
-   "fieldtype": "Link",
+   "fieldtype": "Table MultiSelect",
    "label": "Po No",
-   "options": "Purchase Order"
+   "options": "PO CT"
   },
   {
    "fieldname": "boe_date",
@@ -82,6 +84,7 @@
   {
    "fieldname": "currency",
    "fieldtype": "Link",
+   "hidden": 1,
    "label": "Currency",
    "options": "Currency"
   },
@@ -92,13 +95,14 @@
   {
    "fetch_from": "pre_alert.vendor",
    "fieldname": "vendor",
-   "fieldtype": "Link",
+   "fieldtype": "Table MultiSelect",
    "label": "Vendor",
-   "options": "Supplier"
+   "options": "Supplier CT"
   },
   {
    "fieldname": "exchange_rate",
    "fieldtype": "Currency",
+   "hidden": 1,
    "label": "Exchange Rate"
   },
   {
@@ -112,6 +116,7 @@
   {
    "fieldname": "boe_entries",
    "fieldtype": "Table",
+   "hidden": 1,
    "label": "BOE Entries",
    "options": "BOE Entries"
   },
@@ -120,6 +125,7 @@
    "fieldtype": "Section Break"
   },
   {
+   "fetch_from": "pickup_request.base_total",
    "fieldname": "total_inr_value",
    "fieldtype": "Currency",
    "label": "Total Inr Value",
@@ -265,6 +271,7 @@
   {
    "fieldname": "pre_alert",
    "fieldtype": "Link",
+   "hidden": 1,
    "label": "Pre Alert",
    "options": "Pre Alert"
   },
@@ -273,15 +280,24 @@
    "fieldname": "cha",
    "fieldtype": "Link",
    "label": "CHA",
-   "options": "Supplier",
-   "read_only": 1
+   "options": "Supplier"
+  },
+  {
+   "fieldname": "freight",
+   "fieldtype": "Float",
+   "label": "FREIGHT"
+  },
+  {
+   "fieldname": "misc_charge",
+   "fieldtype": "Float",
+   "label": "MISC CHARGE"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-10-10 14:49:29.285748",
+ "modified": "2025-11-05 12:42:05.021945",
  "modified_by": "Administrator",
  "module": "Import",
  "name": "BOE",
