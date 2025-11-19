@@ -10,7 +10,7 @@ frappe.ui.form.on("Purchase Order", {
                 }, __("Create"));
             }
         }
-        update_progress_tracking(frm);
+        // update_progress_tracking(frm);
         // handle_import_customizations(frm);
         add_conditional_buttons(frm);
 
