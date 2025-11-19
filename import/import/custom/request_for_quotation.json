@@ -1745,7 +1745,7 @@
    "description": null,
    "docstatus": 0,
    "dt": "Request for Quotation",
-   "fetch_from": "custom_pickup_request.supplier_address",
+   "fetch_from": "custom_pickup_request.type_of_shipments",
    "fetch_if_empty": 0,
    "fieldname": "custom_shipment_type",
    "fieldtype": "Link",
