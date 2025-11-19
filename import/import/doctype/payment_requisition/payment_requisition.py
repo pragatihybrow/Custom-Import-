@@ -160,6 +160,118 @@ class PaymentRequisition(Document):
                     f"Currently found: {matched_count}"
                 )
     
+    # def create_customs_duty_journal_entry(self):
+    #     """Auto-create a Journal Entry for Customs Duty on submit"""
+    #     from frappe.utils import flt, nowdate
+    #     import frappe
+    #     from frappe import _
+
+    #     total_customs_duty = (
+    #         flt(self.bcd)
+    #         + flt(self.igst)
+    #         + flt(self.health_cess)
+    #         + flt(self.sw_surcharge)
+    #     )
+
+    #     if total_customs_duty <= 0:
+    #         frappe.msgprint(_("No Customs Duty amount found, Journal Entry not created."))
+    #         return
+
+    #     # Get company details
+    #     company = frappe.get_doc("Company", self.company)
+    #     company_abbr = company.abbr
+
+    #     # Fetch accounts from company defaults
+    #     customs_duty_expense_account = f"Customs Duty Expense - {company_abbr}"
+
+    #     # ✅ Get Payable Account dynamically from Company custom field
+    #     duty_payable_account = company.default_customs_expense_account
+
+    #     if not duty_payable_account:
+    #         frappe.throw(_("Please set 'Default Customs Expense Account' in Company {0}.").format(self.company))
+
+    #     # Get account type of payable account
+    #     account_type = frappe.db.get_value("Account", duty_payable_account, "account_type")
+
+    #     # Build comma-separated PO numbers (if available)
+    #     po_list = []
+    #     if hasattr(self, "po_wono") and self.po_wono:
+    #         po_list = [d.purchase_order for d in self.po_wono if d.purchase_order]
+    #     po_numbers = ", ".join(po_list) if po_list else "N/A"
+
+    #     # Create Journal Entry
+    #     je = frappe.new_doc("Journal Entry")
+    #     je.voucher_type = "Journal Entry"
+    #     je.posting_date = nowdate()
+    #     je.custom_payment_requisition = self.name
+    #     je.company = self.company
+    #     je.user_remark = (
+    #         f"Being Duty payable against {self.name}, Job No. {self.job_no or ''}, "
+    #         f"PO No. {po_numbers}, BE No. {self.boe_no or ''} Dt. {self.boe_date or ''}"
+    #     )
+    #     je.cheque_no = self.name
+    #     je.cheque_date = self.posting_date
+
+    #     # Debit - Customs Duty Expense
+    #     # je.append("accounts", {
+    #     #     "account": customs_duty_expense_account,
+    #     #     "debit_in_account_currency": total_customs_duty,
+    #     #     "cost_center": getattr(self, "cost_center", None),
+    #     # })
+    #     # ✅ Split IGST into a separate line if applicable
+    #     igst_amount = flt(self.igst)
+    #     other_duties = flt(self.bcd) + flt(self.health_cess) + flt(self.sw_surcharge)
+
+    #     # Debit - Customs Duty Expense (excluding IGST)
+    #     if other_duties > 0:
+    #         je.append("accounts", {
+    #             "account": customs_duty_expense_account,
+    #             "debit_in_account_currency": other_duties,
+    #             "cost_center": getattr(self, "cost_center", None),
+    #         })
+
+    #     # Debit - IGST Expense (separate line)
+    #     if igst_amount > 0:
+    #         # igst_account = customs_duty_expense_accoun
+    #         je.append("accounts", {
+    #             "account": customs_duty_expense_account,
+    #             "debit_in_account_currency": igst_amount,
+    #             "cost_center": getattr(self, "cost_center", None),
+    #         })
+
+
+    #     # Credit - Customs Duty Payable
+    #     credit_entry = {
+    #         "account": duty_payable_account,
+    #         "credit_in_account_currency": total_customs_duty,
+    #     }
+
+    #     # ✅ Set CHA as party if available
+    #     if getattr(self, "cha", None):
+    #         credit_entry.update({
+    #             "party_type": "Supplier",
+    #             "party": self.cha
+    #         })
+    #     elif account_type == "Payable" and getattr(self, "supplier_name", None):
+    #         # fallback in case CHA is not set
+    #         credit_entry.update({
+    #             "party_type": "Supplier",
+    #             "party": self.supplier_name
+    #         })
+
+    #     je.append("accounts", credit_entry)
+
+    #     je.insert(ignore_permissions=True)
+    #     # je.submit()
+
+    #     # Optionally store JE reference
+    #     self.db_set("journal_entry", je.name)
+
+    #     frappe.msgprint(
+    #         f"✅ Journal Entry <a href='/app/journal-entry/{je.name}'>{je.name}</a> created for Customs Duty."
+    #     )
+
+
     def create_customs_duty_journal_entry(self):
         """Auto-create a Journal Entry for Customs Duty on submit"""
         from frappe.utils import flt, nowdate
@@ -181,23 +293,26 @@ class PaymentRequisition(Document):
         company = frappe.get_doc("Company", self.company)
         company_abbr = company.abbr
 
-        # Fetch accounts from company defaults
+        # Fetch accounts
         customs_duty_expense_account = f"Customs Duty Expense - {company_abbr}"
 
-        # ✅ Get Payable Account dynamically from Company custom field
+        # Get Payable Account dynamically from Company
         duty_payable_account = company.default_customs_expense_account
-
         if not duty_payable_account:
             frappe.throw(_("Please set 'Default Customs Expense Account' in Company {0}.").format(self.company))
 
-        # Get account type of payable account
         account_type = frappe.db.get_value("Account", duty_payable_account, "account_type")
 
-        # Build comma-separated PO numbers (if available)
+        # Build comma-separated PO numbers
         po_list = []
         if hasattr(self, "po_wono") and self.po_wono:
             po_list = [d.purchase_order for d in self.po_wono if d.purchase_order]
         po_numbers = ", ".join(po_list) if po_list else "N/A"
+
+        # Fetch port code from Pickup Request
+        port_code = None
+        if getattr(self, "pickup_request", None):
+            port_code = frappe.db.get_value("Pickup Request", self.pickup_request, "port_of_destination_pod")
 
         # Create Journal Entry
         je = frappe.new_doc("Journal Entry")
@@ -212,59 +327,70 @@ class PaymentRequisition(Document):
         je.cheque_no = self.name
         je.cheque_date = self.posting_date
 
-        # Debit - Customs Duty Expense
-        # je.append("accounts", {
-        #     "account": customs_duty_expense_account,
-        #     "debit_in_account_currency": total_customs_duty,
-        #     "cost_center": getattr(self, "cost_center", None),
-        # })
-        # ✅ Split IGST into a separate line if applicable
+        # Duty Splits
         igst_amount = flt(self.igst)
         other_duties = flt(self.bcd) + flt(self.health_cess) + flt(self.sw_surcharge)
 
-        # Debit - Customs Duty Expense (excluding IGST)
+        # ---------------------------
+        # Debit Entry – Other Duties
+        # ---------------------------
         if other_duties > 0:
             je.append("accounts", {
                 "account": customs_duty_expense_account,
                 "debit_in_account_currency": other_duties,
                 "cost_center": getattr(self, "cost_center", None),
+                "custom_bill_of_entry_no": self.boe_no,
+                "custom_bill_of_entry_date": self.boe_date,
+                "custom_port_code": port_code
             })
 
-        # Debit - IGST Expense (separate line)
+        # ---------------------------
+        # Debit Entry – IGST
+        # ---------------------------
         if igst_amount > 0:
-            # igst_account = customs_duty_expense_accoun
             je.append("accounts", {
                 "account": customs_duty_expense_account,
                 "debit_in_account_currency": igst_amount,
                 "cost_center": getattr(self, "cost_center", None),
+                "custom_bill_of_entry_no": self.boe_no,
+                "custom_bill_of_entry_date": self.boe_date,
+                "custom_port_code": port_code
             })
 
-
-        # Credit - Customs Duty Payable
+        # ---------------------------
+        # Credit Entry – Duty Payable
+        # ---------------------------
         credit_entry = {
             "account": duty_payable_account,
             "credit_in_account_currency": total_customs_duty,
         }
 
-        # ✅ Set CHA as party if available
+        # Set Supplier / CHA
         if getattr(self, "cha", None):
             credit_entry.update({
                 "party_type": "Supplier",
                 "party": self.cha
             })
         elif account_type == "Payable" and getattr(self, "supplier_name", None):
-            # fallback in case CHA is not set
             credit_entry.update({
                 "party_type": "Supplier",
                 "party": self.supplier_name
             })
 
+        # Add BOE + Port details
+        credit_entry.update({
+            "custom_bill_of_entry_no": self.boe_no,
+            "custom_bill_of_entry_date": self.boe_date,
+            "custom_port_code": port_code
+        })
+
         je.append("accounts", credit_entry)
 
+        # Save JE
         je.insert(ignore_permissions=True)
         # je.submit()
 
-        # Optionally store JE reference
+        # Store JE reference
         self.db_set("journal_entry", je.name)
 
         frappe.msgprint(
