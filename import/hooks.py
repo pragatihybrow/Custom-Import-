@@ -250,7 +250,7 @@ doctype_js = {
         "Purchase Order": "public/js/purchase_order.js",
         "Supplier Quotation": "public/js/supplier_quotation.js",
         "Purchase Invoice": "public/js/purchase_invoice.js",
-        "Payment Entry": "public/js/payment_entry.js",
+        # "Payment Entry": "public/js/payment_entry.js",
         # "Bill of Entry": "public/js/e_waybill_action.js",
 
 }
@@ -271,11 +271,11 @@ override_whitelisted_methods = {
 }
 
 doc_events = {
-    "Payment Entry": {
-        "before_save": "import.config.py.payment_entry.set_custom_fields",
-        "validate": "import.config.py.payment_entry.doc_attachment",
-        "before_submit": "import.config.py.payment_entry.doc_attachment2"
-    },
+    # "Payment Entry": {
+    #     "before_save": "import.config.py.payment_entry.set_custom_fields",
+    #     "validate": "import.config.py.payment_entry.doc_attachment",
+    #     "before_submit": "import.config.py.payment_entry.doc_attachment2"
+    # },
     "BOE": {
         "on_submit": "import.config.py.bill_of_entry.update_payment_request"
     },
