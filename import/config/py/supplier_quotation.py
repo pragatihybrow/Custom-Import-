@@ -38,35 +38,35 @@ def set_quotation_number(doc, method):
 
 
 
-def set_logistics_warehouse(doc, method=None):
-    """
-    Auto-set warehouse for Supplier Quotation when custom_type = Logistics.
-    Applies to child table: Supplier Quotation Item.
-    """
+# def set_logistics_warehouse(doc, method=None):
+#     """
+#     Auto-set warehouse for Supplier Quotation when custom_type = Logistics.
+#     Applies to child table: Supplier Quotation Item.
+#     """
 
-    # Run only for Logistics type quotations
-    if doc.custom_type != "Logistics":
-        return
+#     # Run only for Logistics type quotations
+#     if doc.custom_type != "Logistics":
+#         return
 
-    # Fetch company's default temporary warehouse
-    temp_wh = frappe.db.get_value(
-        "Company",
-        doc.company,
-        "custom_default_temporary_warehouse"
-    )
+#     # Fetch company's default temporary warehouse
+#     temp_wh = frappe.db.get_value(
+#         "Company",
+#         doc.company,
+#         "custom_default_temporary_warehouse"
+#     )
 
-    if not temp_wh:
-        return
+#     if not temp_wh:
+#         return
 
-    # Loop through items
-    for item in doc.items or []:
+#     # Loop through items
+#     for item in doc.items or []:
 
-        # Check each possible field and set only if empty
-        if item.meta.has_field("warehouse") and not item.get("warehouse"):
-            item.warehouse = temp_wh
+#         # Check each possible field and set only if empty
+#         if item.meta.has_field("warehouse") and not item.get("warehouse"):
+#             item.warehouse = temp_wh
 
-        if item.meta.has_field("set_warehouse") and not item.get("set_warehouse"):
-            item.set_warehouse = temp_wh
+#         if item.meta.has_field("set_warehouse") and not item.get("set_warehouse"):
+#             item.set_warehouse = temp_wh
 
-        if item.meta.has_field("custom_warehouse") and not item.get("custom_warehouse"):
-            item.custom_warehouse = temp_wh
+#         if item.meta.has_field("custom_warehouse") and not item.get("custom_warehouse"):
+#             item.custom_warehouse = temp_wh

@@ -282,12 +282,8 @@ doc_events = {
     "Request for Quotation": {
         "on_submit": "import.config.py.rfq.on_rfq_submit"
     },
-     "Supplier Quotation": {
-        "before_validate": "import.config.supplier_quotation.set_logistics_warehouse",
-        "before_save": "import.config.supplier_quotation.set_quotation_number",
+   
+       "Supplier Quotation": {
+        "before_save": "import.config.py.supplier_quotation.set_quotation_number"
     }
 }
-#        "Supplier Quotation": {
-#         "before_save": "import.config.py.supplier_quotation.set_quotation_number"
-#     }
-# }
