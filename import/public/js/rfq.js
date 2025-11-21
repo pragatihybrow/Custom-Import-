@@ -240,7 +240,7 @@ function create_supplier_quotation(frm, supplier) {
         args: {
             doctype: 'Item',
             filters: {
-                item_group: 'Services',
+                item_group: 'General services',
                 item_name: ['like', '%Transport%']
             },
             fields: ['name', 'stock_uom']
