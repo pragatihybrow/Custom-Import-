@@ -197,6 +197,7 @@
    "reqd": 1
   },
   {
+   "description": "L*B*H(cm)",
    "fieldname": "dimensions",
    "fieldtype": "Data",
    "label": "Dimensions"
@@ -216,9 +217,11 @@
   {
    "fieldname": "shipment_value",
    "fieldtype": "Float",
+   "hidden": 1,
    "label": "Shipment Value"
   },
   {
+   "description": "KG",
    "fieldname": "gross_weight",
    "fieldtype": "Float",
    "label": "Gross Weight"
@@ -407,7 +410,7 @@
    "link_fieldname": "custom_pickup_request"
   }
  ],
- "modified": "2025-11-05 14:05:31.697719",
+ "modified": "2025-11-21 13:53:13.615742",
  "modified_by": "Administrator",
  "module": "Import",
  "name": "Pickup Request",

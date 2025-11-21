@@ -289,12 +289,14 @@ function create_sq_doc(frm, supplier, transport_item, transport_uom) {
         sq.supplier = supplier;
         sq.transaction_date = frappe.datetime.get_today();
         sq.custom_type = 'Logistics';
-        
-        // Link to RFQ and copy pickup request
+
+        // Link RFQ & Pickup Request
         sq.custom_request_for_quotation = frm.doc.name;
         sq.custom_pickup_request = frm.doc.custom_pickup_request;
-        
-        // Add Transport Item to items child table
+
+        // ---------------------------------------------------------------------
+        // Add transport item (fixed row)
+        // ---------------------------------------------------------------------
         if (transport_item) {
             let item_row = frappe.model.add_child(sq, 'items');
             item_row.item_code = transport_item;
@@ -303,31 +305,111 @@ function create_sq_doc(frm, supplier, transport_item, transport_uom) {
             item_row.schedule_date = frappe.datetime.add_days(frappe.datetime.get_today(), 7);
             item_row.request_for_quotation = frm.doc.name;
         }
-        
-        // Copy RFQ items to custom_pickup_details child table
+
+        // ---------------------------------------------------------------------
+        // Copy RFQ items to custom_pickup_details and resolve warehouse from PO
+        // ---------------------------------------------------------------------
         if (frm.doc.items && frm.doc.items.length > 0) {
+            let promises = [];
+
             frm.doc.items.forEach(function(item) {
-                let pickup_row = frappe.model.add_child(sq, 'custom_pickup_details');
-                
-                // Map fields from RFQ items to pickup details
-                pickup_row.pickup_request = frm.doc.custom_pickup_request;
-                pickup_row.item_code = item.item_code;
-                pickup_row.item_name = item.item_name;
-                pickup_row.pick_quantity = item.qty || 0;
-                
-                // Add any other custom fields you need to copy
-                // pickup_row.description = item.description;
-                // pickup_row.uom = item.uom;
-                // pickup_row.warehouse = item.warehouse;
+                // 1. Get PO number from RFQ item
+                let po_no = item.po_number || item.custom_po_no || item.po_no;
+
+                let p = new Promise((resolve) => {
+
+                    if (po_no) {
+                        // 2. Fetch warehouse from Purchase Order → set_warehouse
+                        frappe.db.get_value("Purchase Order", po_no, "set_warehouse")
+                            .then(r => {
+                                let warehouse = r.message.set_warehouse;
+
+                                // Create pickup row
+                                let pickup_row = frappe.model.add_child(sq, 'custom_pickup_details');
+                                pickup_row.pickup_request = frm.doc.custom_pickup_request;
+                                pickup_row.item_code = item.item_code;
+                                pickup_row.item_name = item.item_name;
+                                pickup_row.pick_quantity = item.qty || 0;
+                                pickup_row.warehouse = warehouse;
+
+                                resolve();
+                            });
+                    } else {
+                        // If PO not found, fallback without warehouse
+                        let pickup_row = frappe.model.add_child(sq, 'custom_pickup_details');
+                        pickup_row.pickup_request = frm.doc.custom_pickup_request;
+                        pickup_row.item_code = item.item_code;
+                        pickup_row.item_name = item.item_name;
+                        pickup_row.pick_quantity = item.qty || 0;
+                        resolve();
+                    }
+                });
+
+                promises.push(p);
             });
+
+            // When all PO lookups are complete, open SQ
+            Promise.all(promises).then(() => {
+                frappe.set_route('Form', 'Supplier Quotation', sq.name);
+                frappe.show_alert({
+                    message: __('Logistics Supplier Quotation created successfully'),
+                    indicator: 'green'
+                }, 5);
+            });
+        } else {
+            frappe.set_route('Form', 'Supplier Quotation', sq.name);
         }
-        
-        // Open the new Supplier Quotation
-        frappe.set_route('Form', 'Supplier Quotation', sq.name);
-        
-        frappe.show_alert({
-            message: __('Logistics Supplier Quotation created successfully'),
-            indicator: 'green'
-        }, 5);
     });
 }
+
+// function create_sq_doc(frm, supplier, transport_item, transport_uom) {
+//     frappe.model.with_doctype('Supplier Quotation', function() {
+//         let sq = frappe.model.get_new_doc('Supplier Quotation');
+        
+//         // Set basic fields
+//         sq.supplier = supplier;
+//         sq.transaction_date = frappe.datetime.get_today();
+//         sq.custom_type = 'Logistics';
+        
+//         // Link to RFQ and copy pickup request
+//         sq.custom_request_for_quotation = frm.doc.name;
+//         sq.custom_pickup_request = frm.doc.custom_pickup_request;
+        
+//         // Add Transport Item to items child table
+//         if (transport_item) {
+//             let item_row = frappe.model.add_child(sq, 'items');
+//             item_row.item_code = transport_item;
+//             item_row.qty = 1;
+//             item_row.uom = transport_uom || 'Nos';
+//             item_row.schedule_date = frappe.datetime.add_days(frappe.datetime.get_today(), 7);
+//             item_row.request_for_quotation = frm.doc.name;
+//         }
+        
+//         // Copy RFQ items to custom_pickup_details child table
+//         if (frm.doc.items && frm.doc.items.length > 0) {
+//             frm.doc.items.forEach(function(item) {
+//                 let pickup_row = frappe.model.add_child(sq, 'custom_pickup_details');
+                
+//                 // Map fields from RFQ items to pickup details
+//                 pickup_row.pickup_request = frm.doc.custom_pickup_request;
+//                 pickup_row.item_code = item.item_code;
+//                 pickup_row.item_name = item.item_name;
+//                 pickup_row.pick_quantity = item.qty || 0;
+                
+                
+//                 // Add any other custom fields you need to copy
+//                 // pickup_row.description = item.description;
+//                 // pickup_row.uom = item.uom;
+//                 // pickup_row.warehouse = item.warehouse;
+//             });
+//         }
+        
+//         // Open the new Supplier Quotation
+//         frappe.set_route('Form', 'Supplier Quotation', sq.name);
+        
+//         frappe.show_alert({
+//             message: __('Logistics Supplier Quotation created successfully'),
+//             indicator: 'green'
+//         }, 5);
+//     });
+// }

@@ -399,71 +399,6 @@ def get_suppliers_dialog_data(pickup_request):
         for s in frappe.get_all("Supplier", fields=["name", "email_id"])
     ]
 
-# @frappe.whitelist()
-# def (piccreate_rfq_from_pickup_requestkup_request, suppliers, email_template):
-#     if not suppliers:
-#         frappe.throw("Please add at least one supplier.")
-    
-#     suppliers = json.loads(suppliers)
-#     pickup = frappe.get_doc("Pickup Request", pickup_request)
-#     email_template_doc = frappe.get_doc("Email Template", email_template)
-#     message_for_supplier = email_template_doc.response or ""
-#     company_abbr = frappe.db.get_value("Company", pickup.company, "abbr")
-
-#     rfq = frappe.new_doc("Request for Quotation")
-#     rfq.transaction_date = nowdate()
-#     rfq.custom_pickup_request = pickup.name
-#     rfq.message_for_supplier = message_for_supplier
-#     rfq.custom_type = "Logistics"
-#     # rfq.billing_address = pickup.company_address
-#     # rfq.custom_shipment_address = pickup.company_address
-#     rfq.custom_no_of_pkg_units = pickup.no_of_package
-#     rfq.custom_shipment_type = pickup.type_of_shipments
-
-#     # Add suppliers with email from Supplier doctype
-#     for sup in suppliers:
-#         supplier_name = sup.get("supplier")
-#         supplier_doc = frappe.get_doc("Supplier", supplier_name)
-
-#         rfq.append("suppliers", {
-#             "supplier": supplier_name,
-#             "email_id": supplier_doc.email_id or ""
-#         })
-
-#     # Add items
-#     for item in pickup.purchase_order_details:
-#         item_doc = frappe.get_doc("Item", item.item)
-#         conversion_factor = 1
-#         if item_doc.uoms:
-#             for uom_row in item_doc.uoms:
-#                 if uom_row.uom == item_doc.stock_uom:
-#                     conversion_factor = uom_row.conversion_factor
-#                     break
-
-#         rfq.append("items", {
-#             "item_code": item.item,
-#             "item_name": item.material,
-#             "description": item.material_desc,
-#             "qty": item.pick_qty,
-#             "schedule_date": nowdate(),
-#             "warehouse": f"Finished Goods - {company_abbr}",
-#             "uom": item_doc.stock_uom,
-#             "conversion_factor": conversion_factor
-#         })
-
-#     rfq.insert()
-#     rfq.submit()
-    
-#     # Send emails to suppliers after successful submission
-#     try:
-#         on_rfq_submit(rfq)
-#     except Exception as e:
-#         frappe.log_error(f"Failed to send RFQ emails: {str(e)}")
-#         # Don't fail the RFQ creation if email sending fails
-#         frappe.msgprint(f"RFQ created successfully but failed to send emails: {str(e)}", 
-#                        title="Email Warning", indicator="orange")
-    
-#     return rfq.name
 
 @frappe.whitelist()
 def create_rfq_from_pickup_request(pickup_request, suppliers, email_template, schedule_date=None):
@@ -476,27 +411,27 @@ def create_rfq_from_pickup_request(pickup_request, suppliers, email_template, sc
     message_for_supplier = email_template_doc.response or ""
     company_abbr = frappe.db.get_value("Company", pickup.company, "abbr")
 
+    # --------------------------------------------------------------------------
+    # Create RFQ
+    # --------------------------------------------------------------------------
     rfq = frappe.new_doc("Request for Quotation")
     rfq.transaction_date = nowdate()
     rfq.custom_pickup_request = pickup.name
     rfq.message_for_supplier = message_for_supplier
     rfq.custom_type = "Logistics"
-    rfq.company = pickup.company 
-    # rfq.billing_address = pickup.company_address
-    # rfq.custom_shipment_address = pickup.company_address
+    rfq.company = pickup.company
     rfq.custom_no_of_pkg_units = pickup.no_of_package
     rfq.custom_shipment_type = pickup.type_of_shipments
     
-    # Set schedule_date properly - ensure it's a date string
+    # Set schedule date
     if schedule_date:
-        if isinstance(schedule_date, str):
-            rfq.schedule_date = schedule_date
-        else:
-            rfq.schedule_date = str(schedule_date)
+        rfq.schedule_date = str(schedule_date) if not isinstance(schedule_date, str) else schedule_date
     else:
         rfq.schedule_date = nowdate()
 
-    # Add suppliers with email from Supplier doctype
+    # --------------------------------------------------------------------------
+    # Add Suppliers
+    # --------------------------------------------------------------------------
     for sup in suppliers:
         supplier_name = sup.get("supplier")
         supplier_doc = frappe.get_doc("Supplier", supplier_name)
@@ -506,9 +441,21 @@ def create_rfq_from_pickup_request(pickup_request, suppliers, email_template, sc
             "email_id": supplier_doc.email_id or ""
         })
 
-    # Add items
+    # --------------------------------------------------------------------------
+    # Add Items (warehouse fetched from PO in child table)
+    # --------------------------------------------------------------------------
     for item in pickup.purchase_order_details:
+
+        # 1. Get PO number from child table
+        po_number = item.po_number
+
+        # 2. Fetch warehouse from PO's set_warehouse field
+        po_warehouse = frappe.db.get_value("Purchase Order", po_number, "set_warehouse")
+
+        # 3. Load Item Doc to read stock UOM & uoms
         item_doc = frappe.get_doc("Item", item.item)
+
+        # 4. Get conversion factor
         conversion_factor = 1
         if item_doc.uoms:
             for uom_row in item_doc.uoms:
@@ -516,35 +463,41 @@ def create_rfq_from_pickup_request(pickup_request, suppliers, email_template, sc
                     conversion_factor = uom_row.conversion_factor
                     break
 
+        # 5. Append RFQ item
         rfq.append("items", {
             "item_code": item.item,
             "item_name": item.material,
             "description": item.material_desc,
             "qty": item.pick_qty,
-            "schedule_date": rfq.schedule_date,  # Use the RFQ's schedule_date
-            "warehouse": f"Finished Goods - {company_abbr}",
+            "schedule_date": rfq.schedule_date,
+            "warehouse": po_warehouse ,
             "uom": item_doc.stock_uom,
             "conversion_factor": conversion_factor
         })
 
-    # Validate before insert to catch any type issues
+    # --------------------------------------------------------------------------
+    # Save & Submit RFQ
+    # --------------------------------------------------------------------------
     try:
         rfq.insert()
         rfq.submit()
-        
+
         try:
             on_rfq_submit(rfq)
         except Exception as e:
             frappe.log_error(f"Failed to send RFQ emails: {str(e)}")
-            # Don't fail the RFQ creation if email sending fails
-            frappe.msgprint(f"RFQ created successfully but failed to send emails: {str(e)}", 
-                           title="Email Warning", indicator="orange")
-        
+            frappe.msgprint(
+                f"RFQ created successfully but failed to send emails: {str(e)}",
+                title="Email Warning", indicator="orange"
+            )
+
         return rfq.name
-        
+
     except Exception as e:
         frappe.log_error(f"RFQ Creation Error: {str(e)}")
         frappe.throw(f"Failed to create RFQ: {str(e)}")
+
+
 
 
 def update_po_pick_qty_and_status(pickup_request_name):
