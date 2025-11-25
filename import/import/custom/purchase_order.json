@@ -1389,7 +1389,7 @@
    "name": "Purchase Order-custom_requisitioner",
    "no_copy": 0,
    "non_negative": 0,
-   "options": "Employee",
+   "options": "User",
    "owner": "Administrator",
    "permlevel": 0,
    "placeholder": null,
