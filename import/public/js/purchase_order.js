@@ -10,6 +10,19 @@ frappe.ui.form.on("Purchase Order", {
                 }, __("Create"));
             }
         }
+        if (frm.doc.docstatus === 1 && frm.doc.custom_purchase_sub_type==="Import") {
+            frm.add_custom_button(
+                __('Payment Requisition'),
+                function () {
+                    frappe.new_doc('Payment Requisition', {
+                        purchase_order: frm.doc.name,
+                        supplier: frm.doc.supplier,
+                        company: frm.doc.company
+                    });
+                },
+                __('Create')
+            );
+        }
         // update_progress_tracking(frm);
         // handle_import_customizations(frm);
         add_conditional_buttons(frm);
@@ -355,34 +368,3 @@ function add_conditional_buttons(frm) {
         }, __("Create"));
     }
 }
-
-
-
-
-// frappe.ui.form.on('Purchase Order', {
-//     refresh: function(frm) {
-//         if (frm.doc.docstatus === 1 && frm.doc.custom_pickup_status === "Fully Picked" && frm.doc.custom_pickup_request) {
-//             frm.add_custom_button(__('Create Custom Duty Journal Entry'), function() {
-//                 frappe.call({
-//                     method: "import.config.py.purchase_order.create_custom_duty_journal_entry",
-//                     args: {
-//                         purchase_order: frm.doc.name
-//                     },
-//                     freeze: true,
-//                     freeze_message: __("Creating Custom Duty Journal Entry..."),
-//                     callback: function(r) {
-//                         if (!r.exc) {
-//                             frappe.msgprint({
-//                                 title: __("Success"),
-//                                 message: __("Journal Entry created successfully: <b>" + r.message + "</b>"),
-//                                 indicator: "green"
-//                             });
-//                             // Optional: redirect to JE
-//                             frappe.set_route("Form", "Journal Entry", r.message);
-//                         }
-//                     }
-//                 });
-//             }, __("Create"));
-//         }
-//     }
-// });

@@ -4,6 +4,13 @@ from frappe.utils import flt
 from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
 from erpnext.buying.doctype.purchase_order.purchase_order import make_purchase_invoice as erpnext_make_pi
 
+
+def before_cancel_po(doc, method):
+    for item in doc.items:
+        item.material_request = None
+        item.material_request_item = None
+
+
 # ------------------- MAKE PURCHASE INVOICE -------------------
 
 @frappe.whitelist()
@@ -114,58 +121,3 @@ def get_mr_item_fields(mr_item_name):
         ["custom_materil_po_text", "custom_supplier_suggestion", "custom_other_remarks", "custom_item_note"],
         as_dict=True
     )
-
-
-# import frappe
-# from frappe.utils import flt
-
-# @frappe.whitelist()
-# def create_custom_duty_journal_entry(purchase_order, duty_amount):
-#     po = frappe.get_doc("Purchase Order", purchase_order)
-#     duty_amount = flt(duty_amount)
-
-#     if duty_amount <= 0:
-#         frappe.throw("Please enter a valid Custom Duty Amount greater than zero.")
-
-#     # Validation
-#     if not (po.custom_pickup_status == "Fully Picked" and po.custom_pickup_request):
-#         frappe.throw("Journal Entry can only be created if Pickup Status is 'Fully Picked' and Pickup Request is present.")
-
-#     # Avoid duplicates
-#     existing_je = frappe.db.exists("Journal Entry", {"custom_purchase_order": po.name})
-#     if existing_je:
-#         frappe.throw(f"Journal Entry already exists for this Purchase Order: <b>{existing_je}</b>")
-
-#     # Create Journal Entry
-#     je = frappe.new_doc("Journal Entry")
-#     je.voucher_type = "Journal Entry"
-#     je.company = po.company
-#     je.posting_date = frappe.utils.nowdate()
-#     je.user_remark = f"Custom Duty Expense for Purchase Order {po.name}"
-#     je.custom_purchase_order = po.name
-
-#     # Define accounts (you can change these account names as per your chart)
-#     custom_duty_expense_account = "Custom Duty Expense - " + po.company_abbr
-#     custom_duty_payable_account = "Duties and Taxes - " + po.company_abbr
-
-#     # 🔸 Debit: Custom Duty Expense
-#     je.append("accounts", {
-#         "account": custom_duty_expense_account,
-#         "debit_in_account_currency": duty_amount,
-#         "credit_in_account_currency": 0
-#     })
-
-#     # 🔸 Credit: Custom Duty Payable
-#     je.append("accounts", {
-#         "account": custom_duty_payable_account,
-#         "credit_in_account_currency": duty_amount,
-#         "debit_in_account_currency": 0,
-#         "party_type": "Supplier",
-#         "party": po.supplier
-#     })
-
-#     je.insert(ignore_permissions=True)
-#     je.submit()
-
-#     frappe.msgprint(f"✅ Custom Duty Journal Entry {je.name} created successfully.")
-#     return je.name

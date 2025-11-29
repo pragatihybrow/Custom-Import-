@@ -1,5 +1,33 @@
 import frappe
+
+
+def purchase_order_linkage(doc, method=None):
+    # Find all Purchase Orders linked to this Material Request
+    linked_pos = frappe.db.sql("""
+        SELECT poi.name, poi.parent
+        FROM `tabPurchase Order Item` poi
+        INNER JOIN `tabPurchase Order` po ON po.name = poi.parent
+        WHERE poi.material_request = %s
+        AND po.docstatus = 1
+    """, doc.name, as_dict=1)
+    
+    if linked_pos:
+        for po_item in linked_pos:
+            # Clear the material request link
+            frappe.db.sql("""
+                UPDATE `tabPurchase Order Item`
+                SET material_request = NULL, material_request_item = NULL
+                WHERE name = %s
+            """, po_item.name)
+            
+            frappe.msgprint(
+                f"Removed linkage with Purchase Order {po_item.parent}",
+                alert=True
+            )
         
+        # Commit the changes
+        frappe.db.commit()
+
         
 @frappe.whitelist()
 def get_purchase_order_details(doc):

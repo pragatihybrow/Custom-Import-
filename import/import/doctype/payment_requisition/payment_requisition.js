@@ -1,7 +1,6 @@
 frappe.ui.form.on('Payment Requisition', {
     refresh: function(frm) {
-        // Add "Get Pickup Request" button - only if document is draft
-        if (frm.doc.docstatus === 0) {
+        if (frm.doc.docstatus === 0 && !frm.doc.pickup_request) {
             frm.add_custom_button(__('Get Pickup Request'), function() {
                 show_pickup_request_dialog(frm);
             }).addClass('btn-primary');
@@ -85,11 +84,16 @@ function show_pickup_request_dialog(frm) {
                 label: __('Search'),
                 placeholder: __('Type to search...'),
                 onchange: function() {
-                    filter_table(this.value);
+                    window.current_page = 1;
+                    filter_and_render_table(this.value);
                 }
             },
             {
                 fieldname: 'pickup_request_html',
+                fieldtype: 'HTML'
+            },
+            {
+                fieldname: 'pagination_html',
                 fieldtype: 'HTML'
             },
             {
@@ -103,35 +107,23 @@ function show_pickup_request_dialog(frm) {
         primary_action: function() {
             let selected = d.get_value('selected_pickup_request');
             if (selected) {
-                frappe.call({
-                    method: 'import.import.doctype.payment_requisition.payment_requisition.validate_pickup_request',
-                    args: { pickup_request: selected },
-                    callback: function(r) {
-                        if (r.message && r.message.exists) {
-                            frappe.msgprint({
-                                title: __('Already Exists'),
-                                message: __('Payment Requisition {0} already exists for this Pickup Request', 
-                                    ['<a href="/app/payment-requisition/' + r.message.payment_requisition + '">' + 
-                                    r.message.payment_requisition + '</a>']),
-                                indicator: 'orange'
-                            });
-                        } else {
-                            fetch_pickup_request_details(frm, selected);
-                            d.hide();
-                        }
-                    }
-                });
+                fetch_pickup_request_details(frm, selected);
+                d.hide();
             } else {
                 frappe.msgprint(__('Please select a Pickup Request'));
             }
         }
     });
 
-    // Fetch available pickup requests
+    // Fetch available pickup requests (only those without active Payment Requisition)
     frappe.call({
         method: 'import.import.doctype.payment_requisition.payment_requisition.get_available_pickup_requests',
         callback: function(r) {
             if (r.message && r.message.length > 0) {
+                window.all_pickup_data = r.message;
+                window.current_page = 1;
+                window.items_per_page = 5;
+                window.current_dialog = d;
                 render_pickup_requests(d, r.message);
             } else {
                 d.fields_dict.pickup_request_html.$wrapper.html(
@@ -148,7 +140,30 @@ function show_pickup_request_dialog(frm) {
     d.show();
 }
 
+function filter_and_render_table(search_text) {
+    search_text = (search_text || '').toLowerCase();
+    
+    if (!search_text) {
+        window.filtered_data = window.all_pickup_data;
+    } else {
+        window.filtered_data = window.all_pickup_data.filter(row => {
+            let searchable = (row.name + ' ' + (row.company || '') + ' ' + (row.incoterm || '')).toLowerCase();
+            return searchable.includes(search_text);
+        });
+    }
+    
+    render_pickup_requests(window.current_dialog, window.filtered_data);
+}
+
 function render_pickup_requests(dialog, data) {
+    window.filtered_data = data;
+    
+    let total_items = data.length;
+    let total_pages = Math.ceil(total_items / window.items_per_page);
+    let start_index = (window.current_page - 1) * window.items_per_page;
+    let end_index = Math.min(start_index + window.items_per_page, total_items);
+    let paginated_data = data.slice(start_index, end_index);
+
     let html = `
         <style>
             .pickup-request-table {
@@ -204,44 +219,174 @@ function render_pickup_requests(dialog, data) {
                 <tbody>
     `;
 
-    data.forEach(row => {
+    if (paginated_data.length === 0) {
         html += `
-            <tr data-name="${row.name}" data-searchable="${(row.name + ' ' + (row.company || '') + ' ' + (row.incoterm || '')).toLowerCase()}">
-                <td class="text-center">
-                    <input type="radio" name="pickup_request_radio" value="${row.name}">
+            <tr>
+                <td colspan="8" class="text-center text-muted" style="padding: 30px;">
+                    No results found
                 </td>
-                <td><span class="pr-link">${row.name}</span></td>
-                <td>${frappe.datetime.str_to_user(row.po_date) || '-'}</td>
-                <td>${row.company || '-'}</td>
-                <td>${row.incoterm || '-'}</td>
-                <td>${row.mode_of_shipment || '-'}</td>
-                <td>${row.country_origin || '-'}</td>
-                <td class="text-right">${format_currency(row.grand_total || 0, row.currency)}</td>
             </tr>
         `;
-    });
+    } else {
+        paginated_data.forEach(row => {
+            html += `
+                <tr data-name="${row.name}">
+                    <td class="text-center">
+                        <input type="radio" name="pickup_request_radio" value="${row.name}">
+                    </td>
+                    <td><span class="pr-link">${row.name}</span></td>
+                    <td>${frappe.datetime.str_to_user(row.po_date) || '-'}</td>
+                    <td>${row.company || '-'}</td>
+                    <td>${row.incoterm || '-'}</td>
+                    <td>${row.mode_of_shipment || '-'}</td>
+                    <td>${row.country_origin || '-'}</td>
+                    <td class="text-right">${format_currency(row.grand_total || 0, row.currency)}</td>
+                </tr>
+            `;
+        });
+    }
 
     html += `</tbody></table></div>`;
     dialog.fields_dict.pickup_request_html.$wrapper.html(html);
 
+    // Render pagination
+    render_pagination(dialog, total_items, total_pages);
+
     // Add click handlers
     dialog.$wrapper.find('.pickup-request-table tbody tr').on('click', function() {
         let name = $(this).data('name');
-        $(this).find('input[type="radio"]').prop('checked', true);
-        $(this).addClass('selected').siblings().removeClass('selected');
-        dialog.set_value('selected_pickup_request', name);
+        if (name) {
+            $(this).find('input[type="radio"]').prop('checked', true);
+            $(this).addClass('selected').siblings().removeClass('selected');
+            dialog.set_value('selected_pickup_request', name);
+        }
+    });
+}
+
+function render_pagination(dialog, total_items, total_pages) {
+    if (total_items === 0) {
+        dialog.fields_dict.pagination_html.$wrapper.html('');
+        return;
+    }
+
+    let start_item = (window.current_page - 1) * window.items_per_page + 1;
+    let end_item = Math.min(window.current_page * window.items_per_page, total_items);
+
+    let pagination_html = `
+        <style>
+            .pagination-wrapper {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 15px 0;
+                margin-top: 10px;
+                border-top: 1px solid #dee2e6;
+            }
+            .pagination-info {
+                color: #6c757d;
+                font-size: 13px;
+            }
+            .pagination-controls {
+                display: flex;
+                gap: 5px;
+            }
+            .pagination-btn {
+                padding: 6px 12px;
+                border: 1px solid #dee2e6;
+                background: white;
+                cursor: pointer;
+                border-radius: 4px;
+                font-size: 13px;
+                transition: all 0.2s;
+            }
+            .pagination-btn:hover:not(:disabled) {
+                background: #f8f9fa;
+                border-color: #adb5bd;
+            }
+            .pagination-btn:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+            .pagination-btn.active {
+                background: #2490ef;
+                color: white;
+                border-color: #2490ef;
+            }
+        </style>
+        <div class="pagination-wrapper">
+            <div class="pagination-info">
+                Showing ${start_item} to ${end_item} of ${total_items} entries
+            </div>
+            <div class="pagination-controls">
+                <button class="pagination-btn" id="first-page" ${window.current_page === 1 ? 'disabled' : ''}>
+                    <i class="fa fa-angle-double-left"></i>
+                </button>
+                <button class="pagination-btn" id="prev-page" ${window.current_page === 1 ? 'disabled' : ''}>
+                    <i class="fa fa-angle-left"></i>
+                </button>
+    `;
+
+    // Page numbers
+    let start_page = Math.max(1, window.current_page - 2);
+    let end_page = Math.min(total_pages, window.current_page + 2);
+
+    for (let i = start_page; i <= end_page; i++) {
+        pagination_html += `
+            <button class="pagination-btn page-number ${i === window.current_page ? 'active' : ''}" data-page="${i}">
+                ${i}
+            </button>
+        `;
+    }
+
+    pagination_html += `
+                <button class="pagination-btn" id="next-page" ${window.current_page === total_pages ? 'disabled' : ''}>
+                    <i class="fa fa-angle-right"></i>
+                </button>
+                <button class="pagination-btn" id="last-page" ${window.current_page === total_pages ? 'disabled' : ''}>
+                    <i class="fa fa-angle-double-right"></i>
+                </button>
+            </div>
+        </div>
+    `;
+
+    dialog.fields_dict.pagination_html.$wrapper.html(pagination_html);
+
+    // Add event listeners
+    dialog.$wrapper.find('#first-page').on('click', function() {
+        if (window.current_page !== 1) {
+            window.current_page = 1;
+            render_pickup_requests(dialog, window.filtered_data);
+        }
     });
 
-    // Filtering
-    window.filter_table = function(search_text) {
-        let $rows = dialog.$wrapper.find('.pickup-request-table tbody tr');
-        search_text = (search_text || '').toLowerCase();
+    dialog.$wrapper.find('#prev-page').on('click', function() {
+        if (window.current_page > 1) {
+            window.current_page--;
+            render_pickup_requests(dialog, window.filtered_data);
+        }
+    });
 
-        $rows.each(function() {
-            let searchable = $(this).data('searchable');
-            $(this).toggle(!search_text || searchable.includes(search_text));
-        });
-    };
+    dialog.$wrapper.find('#next-page').on('click', function() {
+        if (window.current_page < total_pages) {
+            window.current_page++;
+            render_pickup_requests(dialog, window.filtered_data);
+        }
+    });
+
+    dialog.$wrapper.find('#last-page').on('click', function() {
+        if (window.current_page !== total_pages) {
+            window.current_page = total_pages;
+            render_pickup_requests(dialog, window.filtered_data);
+        }
+    });
+
+    dialog.$wrapper.find('.page-number').on('click', function() {
+        let page = parseInt($(this).data('page'));
+        if (page !== window.current_page) {
+            window.current_page = page;
+            render_pickup_requests(dialog, window.filtered_data);
+        }
+    });
 }
 
 function fetch_pickup_request_details(frm, pickup_request_name) {
@@ -260,8 +405,6 @@ function fetch_pickup_request_details(frm, pickup_request_name) {
                 frm.set_value('posting_date', frappe.datetime.get_today());
                 frm.set_value('company', pr.company);
 
-
-
                 // Clear and add POs
                 frm.clear_table('po_wono');
                 if (pr.po_list && pr.po_list.length > 0) {
@@ -273,7 +416,6 @@ function fetch_pickup_request_details(frm, pickup_request_name) {
                 frm.refresh_field('po_wono');
 
                 frm.set_value('supplier_name', pr.supplier_name);
-                // frm.set_value('supplier', pr.supplier);
 
                 if (pr.po_date) frm.set_value('po_wo_date', pr.po_date);
 
@@ -287,63 +429,3 @@ function fetch_pickup_request_details(frm, pickup_request_name) {
         }
     });
 }
-
-
-// frappe.ui.form.on('BOE', {
-//     refresh: function(frm) {
-//         populate_po_in_child(frm);
-
-//         // Auto-add first BOE Entries row if conditions are met
-//         if (frm.doc.boe_entries.length === 0 && !frm.doc.pre_alert && frm.doc.po_no?.length && !frm.is_new()) {
-//             let row = frm.add_child('boe_entries');
-            
-//             // Set first PO from Table MultiSelect
-//             frappe.model.set_value(row.doctype, row.name, 'po_number', frm.doc.po_no[0].purchase_order);
-//             frm.refresh_field('boe_entries');
-//         }
-//     },
-    
-//     po_no: function(frm) {
-//         populate_po_in_child(frm);
-//     },
-    
-//     pre_alert: function(frm) {
-//         populate_po_in_child(frm);
-//     }
-// });
-
-// frappe.ui.form.on('BOE Entries', {
-//     boe_entries_add: function(frm, cdt, cdn) {
-//         let row = locals[cdt][cdn];
-//         if (!frm.doc.pre_alert && frm.doc.po_no?.length) {
-//             frappe.model.set_value(cdt, cdn, 'po_number', frm.doc.po_no[0].purchase_order);
-//         }
-//     }
-// });
-// frappe.ui.form.on('BOE', {
-//     refresh(frm) {
-//         populate_po_in_child(frm);
-//     },
-//     po_no(frm) {
-//         populate_po_in_child(frm);
-//     },
-//     pre_alert(frm) {
-//         populate_po_in_child(frm);
-//     }
-// });
-
-// function populate_po_in_child(frm) {
-//     if (!frm.doc.pre_alert && frm.doc.po_no?.length) {
-//         // Clear existing rows to prevent duplicates
-//         frm.clear_table('boe_entries');
-
-//         // Add one row per PO
-//         frm.doc.po_no.forEach(po_row => {
-//             let row = frm.add_child('boe_entries', {
-//                 po_number: po_row.purchase_order
-//             });
-//         });
-
-//         frm.refresh_field('boe_entries');
-//     }
-// }

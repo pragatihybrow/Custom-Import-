@@ -3,99 +3,43 @@
 
 frappe.ui.form.on('Pickup Request', {
     refresh: function(frm) {
-    if (frm.doc.docstatus == 1) {
-        frappe.call({
-            method: 'frappe.client.get_list',
-            args: {
-                doctype: 'Request for Quotation',
-                filters: {
-                    'custom_pickup_request': frm.doc.name
-                },
-                fields: ['name']
-            },
-            callback: function (r) {
-                if (r.message && r.message.length > 0) {
-                    frappe.call({
-                        method: "frappe.client.get_list",
-                        args: {
-                            doctype: "Supplier Quotation",
-                            filters: {
-                                custom_pickup_request: frm.doc.name,
-                                docstatus: 1
-                            },
-                            fields: ['supplier']
-                        },
-                        callback: function (response) {
-                            frm.add_custom_button("Pre Alert", function () {
-                                // Check if supplier data is missing or empty
-                                if (!response.message || response.message.length === 0 || !response.message[0]['supplier']) {
-                                    frappe.msgprint({
-                                        title: __('Error'),
-                                        indicator: 'red',
-                                        message: __('No Supplier Quotation found for this RFQ and Pickup Request. Please create a Supplier Quotation first.')
-                                    });
-                                    return;
-                                }
-                                
-                                // Fetch pickup request details using server method
-                                frappe.call({
-                                    method: "import.import.doctype.pre_alert.pre_alert.get_pickup_request_details",
-                                    args: { pickup_request: frm.doc.name },
-                                    callback: function(pr_data) {
-                                        if (pr_data.message) {
-                                            let pr = pr_data.message;
-                                            
-                                            // Create new Pre Alert
-                                            frappe.model.with_doctype('Pre Alert', function() {
-                                                let pre_alert = frappe.model.get_new_doc('Pre Alert');
-                                                
-                                                // Set vendor and other parent fields
-                                                pre_alert.vendor = response.message[0]['supplier'];
-                                                pre_alert.currency = pr.currency || 'INR';
-                                                pre_alert.exch_rate = pr.conversion_rate || 1;
-                                                pre_alert.total_doc_val = pr.total_doc_val || 0;
-                                                pre_alert.total_inr_val = pr.total_inr_val || 0;
-                                                
-                                                // Add Pickup Request to child table
-                                                let pickup_row = frappe.model.add_child(pre_alert, 'Pickup Request CT', 'pickup_request');
-                                                pickup_row.pickup_request = frm.doc.name;
-                                                
-                                                // Add RFQ to child table
-                                                if (r.message[0]['name']) {
-                                                    let rfq_row = frappe.model.add_child(pre_alert, 'Request For Quotation CT', 'rfq_number');
-                                                    rfq_row.request_for_quotation = r.message[0]['name'];
-                                                }
-                                                
-                                                // Add items to Pre Alert item_details child table
-                                                if (pr.items && pr.items.length > 0) {
-                                                    pr.items.forEach(function(item) {
-                                                        let item_row = frappe.model.add_child(pre_alert, 'Pre-Alert Item Details', 'item_details');
-                                                        
-                                                        item_row.item_code = item.item;
-                                                        item_row.item_name = item.material;
-                                                        item_row.description = item.material_desc;
-                                                        item_row.po_no = item.po_number;
-                                                        item_row.quantity = item.pick_qty;
-                                                        item_row.item_price = item.rate;
-                                                        item_row.amount = item.amount;
-                                                        item_row.total_inr_value = item.amount_in_inr;
-                                                    });
-                                                }
-                                                
-                                                // Navigate to the form
-                                                frappe.set_route('Form', 'Pre Alert', pre_alert.name);
-                                            });
-                                        }
-                                    }
-                                });
-                            }, ("Create"));
+        if (frm.doc.docstatus === 1) {
+            frm.add_custom_button(
+                __('Payment Requisition'),
+                function () {
+                    frappe.model.with_doctype('Payment Requisition', function() {
+                        let payment_req = frappe.model.get_new_doc('Payment Requisition');
+                        
+                        // Set basic fields from Pickup Request
+                        payment_req.pickup_request = frm.doc.name;
+                        payment_req.company = frm.doc.company;
+                        payment_req.mode_of_shipment = frm.doc.mode_of_shipment;
+                        payment_req.origin = frm.doc.country_origin;
+                        payment_req.cargo_type = frm.doc.type_of_cargo;
+                        
+                        // Copy PO/WO details from po_no child table
+                        if (frm.doc.po_no && frm.doc.po_no.length > 0) {
+                            frm.doc.po_no.forEach(function(po) {
+                                let po_row = frappe.model.add_child(payment_req, 'PO CT', 'po_wono');
+                                po_row.purchase_order = po.purchase_order;
+                            });
                         }
-                    })
-                }
-            }
-        })
-    }
-
+                        
+                        // Copy supplier details from name_of_supplier child table
+                        if (frm.doc.name_of_supplier && frm.doc.name_of_supplier.length > 0) {
+                            frm.doc.name_of_supplier.forEach(function(supplier) {
+                                let supplier_row = frappe.model.add_child(payment_req, 'Supplier CT', 'supplier_name');
+                                supplier_row.supplier = supplier.supplier;
+                            });
+                        }
+                        
+                        // Show the new Payment Requisition form
+                        frappe.set_route('Form', 'Payment Requisition', payment_req.name);
+                    });
+                },
+                __('Create')
+            );
+        }
         if (frm.doc.docstatus == 1) {
             frm.add_custom_button('Create RFQ', () => {
                 show_supplier_popup(frm);
@@ -140,143 +84,6 @@ frappe.ui.form.on('Pickup Request', {
             }
         });
 
-// frm.add_custom_button("Purchase Order", function () {
-//     let d = new frappe.ui.form.MultiSelectDialog({
-//         doctype: "Purchase Order",
-//         target: this.cur_frm,
-//         setters: {
-//             // transaction_date: null,
-//             // supplier: frm.doc.name_of_supplier,
-//             // custom_purchase_type: "Import", 
-//             custom_port_of_destination_pod : frm.doc.custom_port_of_destination_pod,
-//             custom_port_of_loading_pol : frm.doc.custom_port_of_loading_pol
-//         },
-//         add_filters_group: 1,
-//         date_field: 'transaction_date',
-//         columns: ['name', 'transaction_date', 'supplier', 'custom_purchase_sub_type'],
-//         get_query() {
-//             return {
-//                 filters: {
-//                     docstatus: ['!=', 2],
-//                     custom_purchase_sub_type: 'Import',
-//                     custom_pickup_status: ['!=', 'Fully Picked']
-//                 }
-//             };
-//         },
-// action: async function (selections) {
-//     d.dialog.hide();
-
-//     let suppliers_set = new Set((frm.doc.name_of_supplier || []).map(row => row.supplier));
-//     let existing_po_set = new Set((frm.doc.po_no || []).map(row => row.purchase_order));
-//     let existing_po_list_set = new Set((frm.doc.purchase_order_list || []).map(row => row.po_number));
-
-//     for (const po_name of selections) {
-//         await frappe.call({
-//             method: "import.import.doctype.pickup_request.pickup_request.get_po_all_details",
-//             args: { po_name },
-//             callback: function (r) {
-//                 if (!r.message) return;
-
-//                 let po_id = r.message.name;
-//                 let supplier_id = r.message.supplier;
-
-//                 // ✅ Validate port_of_loading_pol
-//                 if (frm.doc.port_of_loading_pol && frm.doc.port_of_loading_pol !== r.message.custom_port_of_loading_pol) {
-//                     frappe.msgprint({
-//                         title: "Port of Loading Mismatch",
-//                         message: `Purchase Order ${po_id} has a different Port of Loading (${r.message.custom_port_of_loading_pol}) than the Pickup Request (${frm.doc.port_of_loading_pol}).`,
-//                         indicator: "red"
-//                     });
-//                     return; // ❌ Skip this PO
-//                 }
-
-//                 // ✅ Validate port_of_destination_pod
-//                 if (frm.doc.port_of_destination_pod && frm.doc.port_of_destination_pod !== r.message.custom_port_of_destination_pod) {
-//                     frappe.msgprint({
-//                         title: "Port of Destination Mismatch",
-//                         message: `Purchase Order ${po_id} has a different Port of Destination (${r.message.custom_port_of_destination_pod}) than the Pickup Request (${frm.doc.port_of_destination_pod}).`,
-//                         indicator: "red"
-//                     });
-//                     return; // ❌ Skip this PO
-//                 }
-
-//                 // ✅ Add supplier (no duplicates)
-//                 if (!suppliers_set.has(supplier_id)) {
-//                     suppliers_set.add(supplier_id);
-//                     let supplier_row = frm.add_child("name_of_supplier");
-//                     supplier_row.supplier = supplier_id;
-//                 }
-
-//                 // ✅ Add PO number (no duplicates)
-//                 if (!existing_po_set.has(po_id)) {
-//                     existing_po_set.add(po_id);
-//                     let po_row = frm.add_child("po_no");
-//                     po_row.purchase_order = po_id;
-//                 }
-
-//                 // ✅ Add to purchase_order_list (no duplicates)
-//                 if (!existing_po_list_set.has(po_id)) {
-//                     existing_po_list_set.add(po_id);
-//                     let row = frm.add_child("purchase_order_list");
-//                     row.po_number = po_id;
-//                     row.document_date = r.message.transaction_date;
-//                     row.po_type = r.message.custom_purchase_type;
-//                     row.vendor = supplier_id;
-//                     row.vendor_name = r.message.supplier_name;
-//                     row.currency = r.message.currency;
-//                     row.company = r.message.company;
-//                     row.exchange_rate = r.message.conversion_rate;
-//                 }
-
-//                 // ✅ Add PO items
-//                 r.message.items.forEach(item => {
-//                     let remaining_qty = item.qty - (item.custom_pick_qty || 0);
-//                     let item_row = frm.add_child("purchase_order_details");
-//                     item_row.item = item.item_code;
-//                     item_row.material = item.item_name;
-//                     item_row.quantity = item.qty;
-//                     item_row.material_desc = item.description;
-//                     item_row.pick_qty = remaining_qty,
-//                     // item_row.pick_qty = item.qty;
-//                     item_row.po_number = item.parent;
-//                     item_row.currency = r.message.currency;
-//                     item_row.currency_rate = r.message.conversion_rate;
-//                     item_row.rate = item.rate;
-//                     item_row.amount = item.amount;
-//                     item_row.amount_in_inr = item.base_amount;
-//                 });
-
-//                 // ✅ Set main form fields (only if not set already)
-//                 if (!frm.doc.port_of_loading_pol) {
-//                     frm.set_value("port_of_loading_pol", r.message.custom_port_of_loading_pol);
-//                 }
-//                 if (!frm.doc.port_of_destination_pod) {
-//                     frm.set_value("port_of_destination_pod", r.message.custom_port_of_destination_pod);
-//                 }
-//                 frm.set_value("incoterm", r.message.incoterm);
-//                 frm.set_value("taxes_and_charges", r.message.taxes_and_charges);
-//                 frm.set_value("tax_category", r.message.tax_category);
-//                 frm.set_value("company_address", r.message.billing_address);
-
-//                 frm.refresh_field("purchase_order_list");
-//                 frm.refresh_field("purchase_order_details");
-//                 frm.refresh_field("name_of_supplier");
-//                 frm.refresh_field("po_no");
-//             }
-//         });
-//     }
-
-//     // ✅ Save the document after all selections processed
-//     setTimeout(() => {
-//         frm.save();
-//     }, 500);
-// }
-
-
-//     });
-//     d.dialog.show();
-// }, __("Get Items"));
-//     },
 frm.add_custom_button("Purchase Order", function () {
     let d = new frappe.ui.form.MultiSelectDialog({
         doctype: "Purchase Order",
@@ -927,6 +734,9 @@ function show_supplier_popup(frm) {
                 return;
             }
             
+            // Get the required_by date from the first supplier (or handle multiple dates as needed)
+            const schedule_date = values.supplier_table[0].required_by;
+            
             // Disable the dialog during processing
             d.disable_primary_action();
             
@@ -954,6 +764,7 @@ function show_supplier_popup(frm) {
                         pickup_request: frm.doc.name,
                         suppliers: values.supplier_table,
                         email_template: values.email_template,
+                        schedule_date: schedule_date  // Pass the schedule_date here
                     },
                     callback: function(r) {
                         console.log('Response:', r); // Debug log

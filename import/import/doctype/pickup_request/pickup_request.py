@@ -14,6 +14,39 @@ from erpnext.controllers.buying_controller import BuyingController
 from frappe.utils import get_url
 
 class PickupRequest(Document):
+    def before_cancel(self):
+        for po_row in self.po_no:
+            if po_row.purchase_order:
+                try:
+                    frappe.db.sql("""
+                        DELETE FROM `tabPickup Request CT`
+                        WHERE parent = %s AND pickup_request = %s
+                    """, (po_row.purchase_order, self.name))
+                    
+                    # Update parent doctype field
+                    frappe.db.set_value(
+                        'Purchase Order',
+                        po_row.purchase_order,
+                        'custom_pickup_status',
+                        'Pending',
+                        update_modified=False
+                    )
+                    
+                    # Update child table field - set custom_pick_qty to 0 for all items
+                    frappe.db.sql("""
+                        UPDATE `tabPurchase Order Item`
+                        SET custom_pick_qty = 0
+                        WHERE parent = %s
+                    """, (po_row.purchase_order,))
+                    
+                    # frappe.msgprint(f"Removed linkage with Purchase Order {po_row.purchase_order}")
+                    
+                except Exception as e:
+                    frappe.log_error(f"Error removing linkage: {str(e)}")
+                    frappe.throw(f"Could not remove linkage with Purchase Order {po_row.purchase_order}")
+        
+        # Commit the changes to break the circular reference
+        frappe.db.commit()
    
     def validate(self):
         self.set_missing_values()
@@ -26,35 +59,6 @@ class PickupRequest(Document):
     def before_save(self):
         self.calculate_taxes_and_totals()
     
-    # def set_missing_values(self):
-    #     """Set missing values"""
-    #     # Set tax category based on supplier or company
-    #     if not self.tax_category and self.get('name_of_supplier'):
-    #         supplier_tax_category = frappe.get_cached_value("Supplier", self.name_of_supplier, "tax_category")
-    #         if supplier_tax_category:
-    #             self.tax_category = supplier_tax_category
-        
-    #     if not self.tax_category and self.company:
-    #         company_tax_category = frappe.get_cached_value("Company", self.company, "tax_category")
-    #         if company_tax_category:
-    #             self.tax_category = company_tax_category
-        
-    #     # Set default currency
-    #     if not self.get('currency'):
-    #         self.currency = frappe.get_cached_value("Company", self.company, "default_currency") or "INR"
-        
-    #     # Set default conversion rate - check multiple possible field names
-    #     if not self.get('conversion_rate'):
-    #         # Try to get from purchase order details first
-    #         if self.get("purchase_order_details"):
-    #             for item in self.purchase_order_details:
-    #                 if item.get("currency_rate"):
-    #                     self.conversion_rate = flt(item.currency_rate, 1.0)
-    #                     break
-            
-    #         # If still not set, default to 1.0
-    #         if not self.get('conversion_rate'):
-    #             self.conversion_rate = 1.0
 
 
     def set_missing_values(self):

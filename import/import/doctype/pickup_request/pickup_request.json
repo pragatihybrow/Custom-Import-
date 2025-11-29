@@ -32,6 +32,7 @@
   "type_of_cargo",
   "type_of_shipments",
   "shipment_value",
+  "exim_user",
   "gross_weight",
   "column_break_evrh",
   "mode_of_shipment",
@@ -41,7 +42,6 @@
   "country_origin",
   "pol_code",
   "pod_code",
-  "exim_user",
   "section_break_apxy",
   "purchase_order_list",
   "purchase_order_details",
@@ -410,7 +410,7 @@
    "link_fieldname": "custom_pickup_request"
   }
  ],
- "modified": "2025-11-21 13:53:13.615742",
+ "modified": "2025-11-29 19:40:27.064516",
  "modified_by": "Administrator",
  "module": "Import",
  "name": "Pickup Request",

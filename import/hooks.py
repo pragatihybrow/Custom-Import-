@@ -271,11 +271,6 @@ override_whitelisted_methods = {
 }
 
 doc_events = {
-    # "Payment Entry": {
-    #     "before_save": "import.config.py.payment_entry.set_custom_fields",
-    #     "validate": "import.config.py.payment_entry.doc_attachment",
-    #     "before_submit": "import.config.py.payment_entry.doc_attachment2"
-    # },
     "BOE": {
         "on_submit": "import.config.py.bill_of_entry.update_payment_request"
     },
@@ -283,7 +278,17 @@ doc_events = {
         "on_submit": "import.config.py.rfq.on_rfq_submit"
     },
    
-       "Supplier Quotation": {
+    "Supplier Quotation": {
         "before_save": "import.config.py.supplier_quotation.set_quotation_number"
+    },
+    "Material Request": {
+        "before_cancel": "import.config.py.material_request.purchase_order_linkage"
+    },
+    # "Purchase Order": {
+    #     "before_cancel": "import.config.py.purchase_order.before_cancel_po"
+    # },
+    "Journal Entry": {
+        "before_cancel": "import.config.py.journal_entry.remove_payment_requisition_link"
     }
+
 }

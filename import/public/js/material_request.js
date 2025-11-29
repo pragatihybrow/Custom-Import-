@@ -46,6 +46,33 @@ frappe.ui.form.on("Material Request", {
                 }
             });
         }
+    },
+    custom_requisitioner: function(frm) {
+        if (frm.doc.custom_requisitioner) {
+            frappe.call({
+                method: 'frappe.client.get_value',
+                args: {
+                    doctype: 'Employee',
+                    filters: {
+                        user_id: frm.doc.custom_requisitioner
+                    },
+                    fieldname: ['employee_name', 'cell_number']
+                },
+                callback: function(r) {
+                    if (r.message) {
+                        frm.set_value('custom_requisitioner_email', r.message.employee_name);
+                        frm.set_value('custom_requisitioner_phone', r.message.cell_number);
+                    } else {
+                        frm.set_value('custom_requisitioner_email', '');
+                        frm.set_value('custom_requisitioner_phone', '');
+                        frappe.show_alert({
+                            message: __('No employee found with this email'),
+                            indicator: 'orange'
+                        }, 5);
+                    }
+                }
+            });
+        }
     }
 })
 
