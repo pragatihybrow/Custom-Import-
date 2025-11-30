@@ -657,9 +657,13 @@ function calculate_tax_totals(frm) {
 }
 
 function calculate_grand_totals(frm) {
-    let base_total = frm.doc.base_total || 0;
+    // let base_total = frm.doc.base_total || 0;
     let total = frm.doc.total || 0;
-    frm.set_value('base_grand_total', base_total + frm.doc.base_taxes_and_charges_added);
+    let exact = frm.doc.base_total + frm.doc.base_taxes_and_charges_added;
+    frm.doc.base_grand_total = exact;
+    frm.refresh_field('base_grand_total');
+
+    // frm.set_value('base_grand_total', base_total + frm.doc.base_taxes_and_charges_added);
     frm.set_value('grand_total', total + frm.doc.taxes_and_charges_added);
 }
 

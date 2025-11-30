@@ -141,7 +141,8 @@
   {
    "fieldname": "po_wo_date",
    "fieldtype": "Date",
-   "label": "P.O. W.O. Date"
+   "label": "P.O. W.O. Date",
+   "read_only": 1
   },
   {
    "fieldname": "cha",
@@ -347,7 +348,8 @@
    "default": "0",
    "fieldname": "bill_of_entry_created",
    "fieldtype": "Check",
-   "label": "Bill Of Entry Created"
+   "label": "Bill Of Entry Created",
+   "read_only": 1
   },
   {
    "fieldname": "column_break_vcxy",
@@ -380,7 +382,7 @@
    "link_fieldname": "custom_payment_requisition"
   }
  ],
- "modified": "2025-11-21 13:44:47.635041",
+ "modified": "2025-11-30 11:59:15.101636",
  "modified_by": "Administrator",
  "module": "Import",
  "name": "Payment Requisition",

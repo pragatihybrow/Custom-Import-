@@ -18,7 +18,7 @@ frappe.ui.form.on('Payment Requisition', {
                     },
                     callback: function (r) {
                         if (!r.exc) {
-                            frappe.set_route('Form', 'BOE', r.message); // redirect to BOE
+                            frappe.set_route('Form', 'BOE', r.message);
                         }
                     }
                 });
@@ -115,7 +115,7 @@ function show_pickup_request_dialog(frm) {
         }
     });
 
-    // Fetch available pickup requests (only those without active Payment Requisition)
+    // Fetch available pickup requests
     frappe.call({
         method: 'import.import.doctype.payment_requisition.payment_requisition.get_available_pickup_requests',
         callback: function(r) {
@@ -415,7 +415,19 @@ function fetch_pickup_request_details(frm, pickup_request_name) {
                 }
                 frm.refresh_field('po_wono');
 
-                frm.set_value('supplier_name', pr.supplier_name);
+                // CORRECTED: Handle supplier_name based on field type
+                // If supplier_name is Table MultiSelect field
+                frm.clear_table('supplier_name');
+                if (pr.supplier_name) {
+                    let suppliers = pr.supplier_name.split(',').map(s => s.trim());
+                    suppliers.forEach(function(supplier) {
+                        if (supplier) {
+                            let row = frm.add_child('supplier_name');
+                            row.supplier = supplier;
+                        }
+                    });
+                }
+                frm.refresh_field('supplier_name');
 
                 if (pr.po_date) frm.set_value('po_wo_date', pr.po_date);
 

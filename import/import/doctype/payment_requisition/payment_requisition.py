@@ -59,10 +59,13 @@ class PaymentRequisition(Document):
 
         from frappe.utils import formatdate, fmt_money, get_url_to_form
 
-        # Format PO/WO and supplier values
+        # Format PO/WO values
         po_wo_no = ", ".join([row.purchase_order for row in self.po_wono]) if getattr(self, "po_wono", None) else ""
-        supplier_names = ", ".join([row.supplier for row in self.supplier_name]) if getattr(self, "supplier_name", None) else ""
-        po_wo_date = formatdate(self.get("po_date") or frappe.utils.nowdate(), "dd/MM/yyyy")
+        
+        # CORRECTED: Handle supplier_name as child table
+        supplier_names = ", ".join([row.supplier for row in self.supplier_name]) if getattr(self, "supplier_name", None) and len(self.supplier_name) > 0 else ""
+        
+        po_wo_date = formatdate(self.get("po_wo_date") or frappe.utils.nowdate(), "dd/MM/yyyy")
 
         # Get all users with Accounts Manager role
         accounts_manager_users = [
@@ -86,7 +89,7 @@ class PaymentRequisition(Document):
             <tr><td style="border:1px solid #ccc; padding:6px;"><b>Payment Request No :</b></td><td style="border:1px solid #ccc; padding:6px;">{self.name}</td></tr>
             <tr><td style="border:1px solid #ccc; padding:6px;"><b>Payment Request Date :</b></td><td style="border:1px solid #ccc; padding:6px;">{formatdate(self.creation, "dd/MM/yyyy")}</td></tr>
             <tr><td style="border:1px solid #ccc; padding:6px;"><b>Favoring Of :</b></td><td style="border:1px solid #ccc; padding:6px;">{self.favoring_of or ''}</td></tr>
-            <tr><td style="border:1px solid #ccc; padding:6px;"><b>Country of Origin :</b></td><td style="border:1px solid #ccc; padding:6px;">{self.consignment or ''}</td></tr>
+            <tr><td style="border:1px solid #ccc; padding:6px;"><b>Country of Origin :</b></td><td style="border:1px solid #ccc; padding:6px;">{self.origin or ''}</td></tr>
             <tr><td style="border:1px solid #ccc; padding:6px;"><b>Country Of Consignment :</b></td><td style="border:1px solid #ccc; padding:6px;">{self.consignment or ''}</td></tr>
             <tr><td style="border:1px solid #ccc; padding:6px;"><b>Mode Of Shipment :</b></td><td style="border:1px solid #ccc; padding:6px;">{self.mode_of_shipment or ''}</td></tr>
             <tr><td style="border:1px solid #ccc; padding:6px;"><b>Payable At :</b></td><td style="border:1px solid #ccc; padding:6px;">{self.payable_at or ''}</td></tr>
@@ -144,7 +147,7 @@ class PaymentRequisition(Document):
         """Mark the linked Pickup Request as processed"""
         if self.pickup_request:
             frappe.db.set_value('Pickup Request', self.pickup_request, 'po_updated', 1)
-            frappe.msgprint(_('Pickup Request {0} has been marked as processed').format(self.pickup_request))
+            # frappe.msgprint(_('Pickup Request {0} has been marked as processed').format(self.pickup_request))
 
     def unmark_pickup_request_processed(self):
         """Unmark the linked Pickup Request when cancelled"""
@@ -273,17 +276,21 @@ class PaymentRequisition(Document):
             "credit_in_account_currency": total_customs_duty,
         }
 
-        # Set Supplier / CHA
+        # CORRECTED: Set Supplier / CHA - handle supplier_name as child table
         if getattr(self, "cha", None):
             credit_entry.update({
                 "party_type": "Supplier",
                 "party": self.cha
             })
         elif account_type == "Payable" and getattr(self, "supplier_name", None):
-            credit_entry.update({
-                "party_type": "Supplier",
-                "party": self.supplier_name
-            })
+            # Get first supplier from child table
+            if len(self.supplier_name) > 0:
+                first_supplier = self.supplier_name[0].supplier
+                if first_supplier:
+                    credit_entry.update({
+                        "party_type": "Supplier",
+                        "party": first_supplier
+                    })
 
         # Add BOE + Port details
         credit_entry.update({
@@ -421,4 +428,3 @@ def validate_pickup_request(pickup_request):
         }
     
     return {"exists": False}
-
