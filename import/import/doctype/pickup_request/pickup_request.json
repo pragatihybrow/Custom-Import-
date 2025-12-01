@@ -58,10 +58,12 @@
   "section_break_kgjv",
   "base_taxes_and_charges_added",
   "base_grand_total",
+  "base_rounding_adjustment",
   "total_amount",
   "column_break_qlzm",
   "taxes_and_charges_added",
   "grand_total",
+  "rounding_adjustment",
   "section_break_zgpb",
   "remark"
  ],
@@ -349,19 +351,22 @@
    "fieldtype": "Currency",
    "hidden": 1,
    "label": "Total Amount",
-   "options": "Company:company:default_currency"
+   "options": "Company:company:default_currency",
+   "read_only": 1
   },
   {
    "fieldname": "taxes_and_charges_added",
    "fieldtype": "Currency",
    "label": "Taxes and Charges Added",
-   "options": "currency"
+   "options": "currency",
+   "read_only": 1
   },
   {
    "fieldname": "grand_total",
    "fieldtype": "Currency",
    "label": "Grand Total",
-   "options": "currency"
+   "options": "currency",
+   "read_only": 1
   },
   {
    "fieldname": "section_break_zgpb",
@@ -395,6 +400,19 @@
    "fieldtype": "Link",
    "label": "Exim User",
    "options": "User"
+  },
+  {
+   "fieldname": "base_rounding_adjustment",
+   "fieldtype": "Currency",
+   "label": "Rounding Adjustment",
+   "options": "Company:company:default_currency"
+  },
+  {
+   "fieldname": "rounding_adjustment",
+   "fieldtype": "Currency",
+   "label": "Rounding Adjustment",
+   "options": "currency",
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
@@ -410,7 +428,7 @@
    "link_fieldname": "custom_pickup_request"
   }
  ],
- "modified": "2025-11-29 19:40:27.064516",
+ "modified": "2025-12-01 09:39:09.218163",
  "modified_by": "Administrator",
  "module": "Import",
  "name": "Pickup Request",

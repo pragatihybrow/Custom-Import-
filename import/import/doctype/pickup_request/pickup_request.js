@@ -40,6 +40,7 @@ frappe.ui.form.on('Pickup Request', {
                 __('Create')
             );
         }
+
         if (frm.doc.docstatus == 1) {
             frm.add_custom_button('Create RFQ', () => {
                 show_supplier_popup(frm);
@@ -1042,3 +1043,109 @@ frappe.ui.form.on("Pickup Request", {
         }
     }
 });
+
+frappe.ui.form.on('Pickup Request', {
+   refresh(frm) {
+        frm.enable_save();   // 🔥 Force show Save button
+        toggle_total_field(frm);
+    },
+
+    po_no_add(frm) {
+        // Runs when a row is added
+        toggle_total_field(frm);
+    },
+
+    po_no_remove(frm) {
+        // Runs when a row is removed
+        toggle_total_field(frm);
+    },
+
+    po_no_add(frm) {
+        fetch_rounding_if_single_po(frm);
+    },
+
+    po_no_remove(frm) {
+        fetch_rounding_if_single_po(frm);
+    },
+      total_quantity(frm) {
+        set_po_totals_if_condition(frm);
+    },
+
+    total_picked_quantity(frm) {
+        set_po_totals_if_condition(frm);
+    },
+
+    po_no_add(frm) {
+        set_po_totals_if_condition(frm);
+    },
+
+    po_no_remove(frm) {
+        set_po_totals_if_condition(frm);
+    }
+});
+
+// Custom function
+function toggle_total_field(frm) {
+    const table = frm.doc.po_no || [];
+    if (table.length >= 2) {
+        frm.toggle_display("total", false);   // Hide
+        frm.toggle_display("taxes_and_charges_added", false)
+        frm.toggle_display("grand_total", false)
+        frm.toggle_display("rounding_adjustment", false);
+
+    } else {
+        frm.toggle_display("total", true);
+        frm.toggle_display("rounding_adjustment", true);
+        frm.toggle_display("taxes_and_charges_added", false)
+        frm.toggle_display("grand_total", false)
+    }
+}
+function fetch_rounding_if_single_po(frm) {
+    const po_table = frm.doc.po_no || [];
+
+    // Only 1 PO selected
+    if (po_table.length === 1) {
+        let po_name = po_table[0].purchase_order;
+
+        // Fetch rounding fields from Purchase Order
+        frappe.db.get_value('Purchase Order', po_name, [
+            'rounding_adjustment',
+            'base_rounding_adjustment'
+        ]).then(r => {
+            if (r && r.message) {
+                frm.set_value("rounding_adjustment", r.message.rounding_adjustment);
+                frm.set_value("base_rounding_adjustment", r.message.base_rounding_adjustment);
+            }
+        });
+    } else {
+        // More than one PO → Clear fields (optional)
+        frm.set_value("rounding_adjustment", null);
+        frm.set_value("base_rounding_adjustment", null);
+    }
+}
+function set_po_totals_if_condition(frm) {
+    const po_rows = frm.doc.po_no || [];
+    const total_qty = frm.doc.total_quantity;
+    const picked_qty = frm.doc.total_picked_quantity;
+
+    // Condition 1: Only 1 PO
+    if (po_rows.length === 1) {
+        let po_name = po_rows[0].purchase_order;
+
+        // Condition 2: total quantity == picked quantity
+        if (total_qty && picked_qty && total_qty === picked_qty) {
+
+            frappe.db.get_value('Purchase Order', po_name, [
+                'rounded_total',
+                'base_rounded_total'
+            ]).then(r => {
+                if (r && r.message) {
+                    frm.set_value('total', r.message.rounded_total);
+                    frm.set_value('base_grand_total', r.message.base_rounded_total);
+                }
+            });
+
+        }
+
+    }
+}
