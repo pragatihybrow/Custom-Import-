@@ -389,6 +389,7 @@ function render_pagination(dialog, total_items, total_pages) {
     });
 }
 
+
 function fetch_pickup_request_details(frm, pickup_request_name) {
     frappe.call({
         method: 'import.import.doctype.payment_requisition.payment_requisition.get_pickup_request_details',
@@ -415,8 +416,7 @@ function fetch_pickup_request_details(frm, pickup_request_name) {
                 }
                 frm.refresh_field('po_wono');
 
-                // CORRECTED: Handle supplier_name based on field type
-                // If supplier_name is Table MultiSelect field
+                // Clear and add Suppliers
                 frm.clear_table('supplier_name');
                 if (pr.supplier_name) {
                     let suppliers = pr.supplier_name.split(',').map(s => s.trim());
@@ -428,6 +428,18 @@ function fetch_pickup_request_details(frm, pickup_request_name) {
                     });
                 }
                 frm.refresh_field('supplier_name');
+
+                // Clear and add Items
+                frm.clear_table('items');
+                if (pr.items && pr.items.length > 0) {
+                    pr.items.forEach(function(item) {
+                        let row = frm.add_child('items');
+                        row.item = item.item;
+                        row.description = item.description;
+                        // Add any other fields you want to map
+                    });
+                }
+                frm.refresh_field('items');
 
                 if (pr.po_date) frm.set_value('po_wo_date', pr.po_date);
 
@@ -441,3 +453,56 @@ function fetch_pickup_request_details(frm, pickup_request_name) {
         }
     });
 }
+
+// function fetch_pickup_request_details(frm, pickup_request_name) {
+//     frappe.call({
+//         method: 'import.import.doctype.payment_requisition.payment_requisition.get_pickup_request_details',
+//         args: { pickup_request: pickup_request_name },
+//         freeze: true,
+//         freeze_message: __('Fetching Pickup Request details...'),
+//         callback: function(r) {
+//             if (r.message) {
+//                 let pr = r.message;
+
+//                 frm.set_value('pickup_request', pr.name);
+//                 frm.set_value('mode_of_shipment', pr.mode_of_shipment);
+//                 frm.set_value('origin', pr.country_origin);
+//                 frm.set_value('posting_date', frappe.datetime.get_today());
+//                 frm.set_value('company', pr.company);
+
+//                 // Clear and add POs
+//                 frm.clear_table('po_wono');
+//                 if (pr.po_list && pr.po_list.length > 0) {
+//                     pr.po_list.forEach(function(po) {
+//                         let row = frm.add_child('po_wono');
+//                         row.purchase_order = po.purchase_order;
+//                     });
+//                 }
+//                 frm.refresh_field('po_wono');
+
+//                 // CORRECTED: Handle supplier_name based on field type
+//                 // If supplier_name is Table MultiSelect field
+//                 frm.clear_table('supplier_name');
+//                 if (pr.supplier_name) {
+//                     let suppliers = pr.supplier_name.split(',').map(s => s.trim());
+//                     suppliers.forEach(function(supplier) {
+//                         if (supplier) {
+//                             let row = frm.add_child('supplier_name');
+//                             row.supplier = supplier;
+//                         }
+//                     });
+//                 }
+//                 frm.refresh_field('supplier_name');
+
+//                 if (pr.po_date) frm.set_value('po_wo_date', pr.po_date);
+
+//                 frappe.show_alert({
+//                     message: __('Pickup Request details fetched successfully'),
+//                     indicator: 'green'
+//                 }, 5);
+
+//                 frm.refresh();
+//             }
+//         }
+//     });
+// }

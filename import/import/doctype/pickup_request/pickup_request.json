@@ -405,7 +405,8 @@
    "fieldname": "base_rounding_adjustment",
    "fieldtype": "Currency",
    "label": "Rounding Adjustment",
-   "options": "Company:company:default_currency"
+   "options": "Company:company:default_currency",
+   "read_only": 1
   },
   {
    "fieldname": "rounding_adjustment",
@@ -428,7 +429,7 @@
    "link_fieldname": "custom_pickup_request"
   }
  ],
- "modified": "2025-12-01 09:39:09.218163",
+ "modified": "2025-12-04 11:33:50.745816",
  "modified_by": "Administrator",
  "module": "Import",
  "name": "Pickup Request",

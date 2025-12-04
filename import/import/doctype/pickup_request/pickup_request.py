@@ -104,22 +104,78 @@ class PickupRequest(Document):
                 self.conversion_rate = 1.0
 
 
+    # def calculate_totals(self):
+    #     """Calculate basic totals from items"""
+    #     self.total_amount = 0
+    #     self.total_quantity = 0
+    #     self.total_picked_quantity = 0
+        
+    #     if self.get("purchase_order_details"):
+    #         for item in self.purchase_order_details:
+    #             amount = flt(item.get("amount_in_inr", 0)) or flt(item.get("amount", 0))
+    #             self.total_amount += amount
+    #             self.total_quantity += flt(item.get("quantity", 0))
+    #             self.total_picked_quantity += flt(item.get("pick_qty", 0))
+        
+    #     # Set net totals for tax calculations
+    #     self.base_net_total = self.total_amount
+    #     self.net_total = self.total_amount / flt(self.get('conversion_rate', 1), 1)
+
+
     def calculate_totals(self):
-        """Calculate basic totals from items"""
         self.total_amount = 0
         self.total_quantity = 0
         self.total_picked_quantity = 0
         
         if self.get("purchase_order_details"):
             for item in self.purchase_order_details:
-                amount = flt(item.get("amount_in_inr", 0)) or flt(item.get("amount", 0))
+                # ✅ FIX: Use consistent precision (2 decimal places)
+                amount = flt(item.get("amount_in_inr", 0), 2) or flt(item.get("amount", 0), 2)
                 self.total_amount += amount
-                self.total_quantity += flt(item.get("quantity", 0))
-                self.total_picked_quantity += flt(item.get("pick_qty", 0))
+                self.total_quantity += flt(item.get("quantity", 0), 2)
+                self.total_picked_quantity += flt(item.get("pick_qty", 0), 2)
+        
+        # ✅ FIX: Round total_amount to 2 decimals consistently
+        self.total_amount = flt(self.total_amount, 2)
         
         # Set net totals for tax calculations
         self.base_net_total = self.total_amount
-        self.net_total = self.total_amount / flt(self.get('conversion_rate', 1), 1)
+        self.net_total = flt(self.total_amount / flt(self.get('conversion_rate', 1), 2), 2)
+
+    def set_grand_total(self):
+        """Set grand total fields"""
+        # ✅ FIX: Use total_amount with proper precision, not rounded to integer
+        base_net_total = flt(self.total_amount, 2)
+        
+        # Set base_total
+        self.base_total = base_net_total
+        
+        # Calculate base grand total with taxes
+        base_grand_total_calculated = flt(
+            self.base_total + flt(self.base_total_taxes_and_charges, 2),
+            2
+        )
+        
+        # Add rounding adjustment if present
+        if self.get('base_rounding_adjustment'):
+            base_grand_total_calculated += flt(self.base_rounding_adjustment, 2)
+        
+        self.base_grand_total = base_grand_total_calculated
+        
+        # Calculate grand total in currency
+        conversion_rate = flt(self.get('conversion_rate', 1), 2)
+        self.total = flt(self.base_total / conversion_rate, 2)
+        
+        grand_total_calculated = flt(
+            self.total + flt(self.taxes_and_charges_added, 2),
+            2
+        )
+        
+        # Add rounding adjustment if present
+        if self.get('rounding_adjustment'):
+            grand_total_calculated += flt(self.rounding_adjustment, 2)
+        
+        self.grand_total = grand_total_calculated
 
     @frappe.whitelist()
     def calculate_taxes_and_totals(self):
@@ -214,11 +270,11 @@ class PickupRequest(Document):
         # Set grand totals
         self.set_grand_total()
 
-    def set_grand_total(self):
-        """Set grand total fields"""
-        base_net_total = flt(self.total_amount, 0)
-        self.base_grand_total = flt(base_net_total + self.base_total_taxes_and_charges)
-        self.grand_total = flt(self.total) + flt(self.taxes_and_charges_added)
+    # def set_grand_total(self):
+    #     """Set grand total fields"""
+    #     base_net_total = flt(self.total_amount, 0)
+    #     self.base_grand_total = flt(base_net_total + self.base_total_taxes_and_charges)
+    #     self.grand_total = flt(self.total) + flt(self.taxes_and_charges_added)
         
     @frappe.whitelist()
     def apply_taxes_and_charges_template(self):

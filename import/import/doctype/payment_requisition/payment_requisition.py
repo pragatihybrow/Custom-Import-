@@ -97,12 +97,10 @@ class PaymentRequisition(Document):
             <tr><td style="border:1px solid #ccc; padding:6px;"><b>Payment Required :</b></td><td style="border:1px solid #ccc; padding:6px;">{self.payment_required or ''}</td></tr>
             <tr><td style="border:1px solid #ccc; padding:6px;"><b>PO/WO No :</b></td><td style="border:1px solid #ccc; padding:6px;">{po_wo_no}</td></tr>
             <tr><td style="border:1px solid #ccc; padding:6px;"><b>PO/WO Date :</b></td><td style="border:1px solid #ccc; padding:6px;">{po_wo_date}</td></tr>
-            <tr><td style="border:1px solid #ccc; padding:6px;"><b>CHA :</b></td><td style="border:1px solid #ccc; padding:6px;">{self.cha or ''}</td></tr>
             <tr><td style="border:1px solid #ccc; padding:6px;"><b>Material Type :</b></td><td style="border:1px solid #ccc; padding:6px;">{self.type_of_materials or ''}</td></tr>
             <tr><td style="border:1px solid #ccc; padding:6px;"><b>Supplier Name :</b></td><td style="border:1px solid #ccc; padding:6px;">{supplier_names}</td></tr>
             <tr><td style="border:1px solid #ccc; padding:6px;"><b>Amount :</b></td><td style="border:1px solid #ccc; padding:6px;">{fmt_money(self.duty_amount)}</td></tr>
             <tr><td style="border:1px solid #ccc; padding:6px;"><b>Amount in Words :</b></td><td style="border:1px solid #ccc; padding:6px;">{self.duty_amount_in_word or ''}</td></tr>
-            <tr><td style="border:1px solid #ccc; padding:6px;"><b>Job No :</b></td><td style="border:1px solid #ccc; padding:6px;">{self.job_no or ''}</td></tr>
             <tr><td style="border:1px solid #ccc; padding:6px;"><b>Special Remark :</b></td><td style="border:1px solid #ccc; padding:6px;">{self.specific_remark or ''}</td></tr>
         </table>
         <br>
@@ -156,17 +154,17 @@ class PaymentRequisition(Document):
             # frappe.msgprint(_('Pickup Request {0} has been unmarked').format(self.pickup_request))
 
     def doc_attachment(self):
-        """Validate minimum 3 required documents attached before saving"""
-        required_docs = ["Checklist", "Commercial Invoice", "AWB", "PO", "BOE"]
-        attached_docs = [d.description for d in self.attach_document]
+        if self.workflow_state == "Sent For Manager Approval":
+            required_docs = ["Checklist", "Commercial Invoice", "AWB", "PO", "BOE"]
+            attached_docs = [d.description for d in self.attach_document]
 
-        matched_count = sum(1 for rd in required_docs if rd in attached_docs)
+            matched_count = sum(1 for rd in required_docs if rd in attached_docs)
 
-        if matched_count < 3:
-            frappe.throw(
-                f"At least 3 out of 5 required Document Attachments must be present. "
-                f"Currently found: {matched_count}"
-            )
+            if matched_count < 3:
+                frappe.throw(
+                    f"At least 3 out of 5 required Document Attachments must be present. "
+                    f"Currently found: {matched_count}"
+                )
 
     def doc_attachment2(self):
         """Validate minimum 4 required documents attached before submitting"""
@@ -277,10 +275,10 @@ class PaymentRequisition(Document):
         }
 
         # CORRECTED: Set Supplier / CHA - handle supplier_name as child table
-        if getattr(self, "cha", None):
+        if getattr(self, "payment_to", None):
             credit_entry.update({
                 "party_type": "Supplier",
-                "party": self.cha
+                "party": self.payment_to
             })
         elif account_type == "Payable" and getattr(self, "supplier_name", None):
             # Get first supplier from child table
@@ -323,6 +321,83 @@ def get_amount_in_words(amount):
         frappe.log_error(f"Money in words error: {str(e)}", "Payment Requisition")
         return ""
 
+
+# @frappe.whitelist()
+# def get_available_pickup_requests():
+#     query = """
+#         SELECT 
+#             pr.name,
+#             pr.po_date,
+#             pr.company,
+#             pr.incoterm,
+#             pr.mode_of_shipment,
+#             pr.country_origin,
+#             pr.grand_total,
+#             pr.currency
+#         FROM 
+#             `tabPickup Request` pr
+#         WHERE 
+#             pr.docstatus = 1
+#             AND pr.name NOT IN (
+#                 SELECT DISTINCT pickup_request 
+#                 FROM `tabPayment Requisition` 
+#                 WHERE docstatus IN (0, 1)
+#                 AND pickup_request IS NOT NULL
+#                 AND pickup_request != ''
+#             )
+#         ORDER BY 
+#             pr.modified DESC
+#     """
+    
+#     results = frappe.db.sql(query, as_dict=1)
+    
+#     # Add supplier_name from child table for each result
+#     for row in results:
+#         suppliers = frappe.get_all(
+#             "Supplier CT",
+#             filters={"parent": row.name, "parenttype": "Pickup Request"},
+#             fields=["supplier"],
+#             pluck="supplier"
+#         )
+#         row['supplier_name'] = ", ".join(suppliers) if suppliers else ""
+    
+#     return results
+
+
+# @frappe.whitelist()
+# def get_pickup_request_details(pickup_request):
+#     """
+#     Fetch complete details of a pickup request
+#     """
+#     if not pickup_request:
+#         frappe.throw(_("Pickup Request is required"))
+    
+#     # Get pickup request header details
+#     pr_doc = frappe.get_doc("Pickup Request", pickup_request)
+    
+#     # Get PO list from child table
+#     po_list = frappe.get_all(
+#         "PO CT",
+#         filters={"parent": pickup_request, "parenttype": "Pickup Request"},
+#         fields=["purchase_order"]
+#     )
+    
+#     # Get supplier list from child table
+#     supplier_list = frappe.get_all(
+#         "Supplier CT",
+#         filters={"parent": pickup_request, "parenttype": "Pickup Request"},
+#         fields=["supplier"]
+#     )
+    
+#     return {
+#         "name": pr_doc.name,
+#         "mode_of_shipment": pr_doc.mode_of_shipment,
+#         "country_origin": pr_doc.country_origin,
+#         "company": pr_doc.company,
+#         "po_date": pr_doc.po_date,
+#         "supplier_name": ", ".join([s.supplier for s in supplier_list]) if supplier_list else "",
+#         "po_list": po_list
+#     }
 
 @frappe.whitelist()
 def get_available_pickup_requests():
@@ -369,7 +444,7 @@ def get_available_pickup_requests():
 @frappe.whitelist()
 def get_pickup_request_details(pickup_request):
     """
-    Fetch complete details of a pickup request
+    Fetch complete details of a pickup request including items
     """
     if not pickup_request:
         frappe.throw(_("Pickup Request is required"))
@@ -391,6 +466,23 @@ def get_pickup_request_details(pickup_request):
         fields=["supplier"]
     )
     
+    # Get items from purchase_order_details child table
+    items = frappe.get_all(
+        "Purchase Order Details",
+        filters={"parent": pickup_request, "parenttype": "Pickup Request"},
+        fields=["item", "material", "material_desc", "quantity", "rate", "amount", "currency"],
+        order_by="idx"
+    )
+    
+    # Format items for Payment Requisition items child table
+    formatted_items = []
+    for item in items:
+        formatted_items.append({
+            "item": item.get("item"),  # Maps to 'item' field in Payment Requisition CT
+            "description": item.get("material_desc") or item.get("material"),  # Maps to 'description'
+            # Add any additional fields you need from Payment Requisition CT
+        })
+    
     return {
         "name": pr_doc.name,
         "mode_of_shipment": pr_doc.mode_of_shipment,
@@ -398,9 +490,9 @@ def get_pickup_request_details(pickup_request):
         "company": pr_doc.company,
         "po_date": pr_doc.po_date,
         "supplier_name": ", ".join([s.supplier for s in supplier_list]) if supplier_list else "",
-        "po_list": po_list
+        "po_list": po_list,
+        "items": formatted_items  # Items to populate in Payment Requisition
     }
-
 
 @frappe.whitelist()
 def validate_pickup_request(pickup_request):

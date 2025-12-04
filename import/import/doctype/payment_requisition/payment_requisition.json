@@ -10,11 +10,12 @@
   "amended_from",
   "pickup_request",
   "division",
+  "payment_type",
+  "payment_to",
   "origin",
   "mode_of_shipment",
   "payment_by",
   "po_wono",
-  "type_of_materials",
   "supplier_name",
   "duty_amount",
   "rodtep_details",
@@ -27,6 +28,7 @@
   "payable_at",
   "payment_required",
   "po_wo_date",
+  "type_of_materials",
   "cha",
   "job_no",
   "duty_amount_in_word",
@@ -34,6 +36,7 @@
   "bill_of_entry_created",
   "section_break_oepz",
   "attach_document",
+  "items",
   "bill_of_entry_details_tab",
   "assessable_value",
   "deferred_duty_amt",
@@ -149,8 +152,7 @@
    "fieldtype": "Link",
    "label": "CHA",
    "link_filters": "[[\"Supplier\",\"supplier_group\",\"=\",\"CHA\"]]",
-   "options": "Supplier",
-   "read_only": 1
+   "options": "Supplier"
   },
   {
    "fieldname": "type_of_materials",
@@ -168,14 +170,12 @@
   {
    "fieldname": "duty_amount",
    "fieldtype": "Float",
-   "label": "Duty Amount",
-   "read_only": 1
+   "label": "Duty Amount"
   },
   {
    "fieldname": "job_no",
    "fieldtype": "Data",
-   "label": "Job No",
-   "read_only": 1
+   "label": "Job No"
   },
   {
    "fieldname": "duty_amount_in_word",
@@ -371,6 +371,24 @@
    "label": "Journal Entry",
    "options": "Journal Entry",
    "read_only": 1
+  },
+  {
+   "fieldname": "payment_type",
+   "fieldtype": "Select",
+   "label": "Payment Type",
+   "options": "\nCustom Duty Payment\nGeneral Payment\nOther Duty Payment"
+  },
+  {
+   "fieldname": "items",
+   "fieldtype": "Table",
+   "label": "Items",
+   "options": "Payment Requisition CT"
+  },
+  {
+   "fieldname": "payment_to",
+   "fieldtype": "Link",
+   "label": "Payment To",
+   "options": "Supplier"
   }
  ],
  "grid_page_length": 50,
@@ -382,7 +400,7 @@
    "link_fieldname": "custom_payment_requisition"
   }
  ],
- "modified": "2025-11-30 11:59:15.101636",
+ "modified": "2025-12-04 10:50:20.810551",
  "modified_by": "Administrator",
  "module": "Import",
  "name": "Payment Requisition",

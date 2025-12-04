@@ -1096,8 +1096,8 @@ function toggle_total_field(frm) {
     } else {
         frm.toggle_display("total", true);
         frm.toggle_display("rounding_adjustment", true);
-        frm.toggle_display("taxes_and_charges_added", false)
-        frm.toggle_display("grand_total", false)
+        frm.toggle_display("taxes_and_charges_added", true)
+        frm.toggle_display("grand_total", true)
     }
 }
 function fetch_rounding_if_single_po(frm) {
@@ -1134,18 +1134,53 @@ function set_po_totals_if_condition(frm) {
 
         // Condition 2: total quantity == picked quantity
         if (total_qty && picked_qty && total_qty === picked_qty) {
-
+            
             frappe.db.get_value('Purchase Order', po_name, [
                 'rounded_total',
-                'base_rounded_total'
+                'base_rounded_total',
+                'base_total_taxes_and_charges' // Fetch taxes from PO
             ]).then(r => {
                 if (r && r.message) {
+                    // Set the total (currency amount)
                     frm.set_value('total', r.message.rounded_total);
-                    frm.set_value('base_grand_total', r.message.base_rounded_total);
+                    
+                    // If Pickup Request has its own taxes, let calculate_grand_totals() handle it
+                    if (!frm.doc.taxes_and_charges && 
+                        (!frm.doc.purchase_taxes_and_charges || 
+                         frm.doc.purchase_taxes_and_charges.length === 0)) {
+                        frm.set_value('base_grand_total', r.message.base_rounded_total);
+                    } else {
+                        // If there are taxes, recalculate properly
+                        calculate_taxes_and_totals(frm);
+                    }
                 }
             });
-
         }
-
     }
 }
+// function set_po_totals_if_condition(frm) {
+//     const po_rows = frm.doc.po_no || [];
+//     const total_qty = frm.doc.total_quantity;
+//     const picked_qty = frm.doc.total_picked_quantity;
+
+//     // Condition 1: Only 1 PO
+//     if (po_rows.length === 1) {
+//         let po_name = po_rows[0].purchase_order;
+
+//         // Condition 2: total quantity == picked quantity
+//         if (total_qty && picked_qty && total_qty === picked_qty) {
+
+//             frappe.db.get_value('Purchase Order', po_name, [
+//                 'rounded_total',
+//                 'base_rounded_total'
+//             ]).then(r => {
+//                 if (r && r.message) {
+//                     frm.set_value('total', r.message.rounded_total);
+//                     frm.set_value('base_grand_total', r.message.base_rounded_total);
+//                 }
+//             });
+
+//         }
+
+//     }
+// }
