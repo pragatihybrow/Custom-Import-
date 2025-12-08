@@ -1158,6 +1158,33 @@ function set_po_totals_if_condition(frm) {
         }
     }
 }
+frappe.ui.form.on('Pickup Request', {
+    validate(frm) {
+        remove_zero_pick_qty_rows(frm);
+    }
+});
+
+
+function remove_zero_pick_qty_rows(frm) {
+    let rows = frm.doc.purchase_order_details || [];
+
+    // Filter only rows where pick_qty > 0
+    let keep_rows = rows.filter(r => {
+        return Number(r.pick_qty) > 0;
+    });
+
+    // Clear table
+    frm.clear_table("purchase_order_details");
+
+    // Add back valid rows
+    keep_rows.forEach(r => {
+        let child = frm.add_child("purchase_order_details");
+        Object.assign(child, r);
+    });
+
+    frm.refresh_field("purchase_order_details");
+}
+
 // function set_po_totals_if_condition(frm) {
 //     const po_rows = frm.doc.po_no || [];
 //     const total_qty = frm.doc.total_quantity;

@@ -51,6 +51,11 @@ frappe.ui.form.on("Purchase Order", {
             });
         }
     },
+    validate(frm) {
+        if (frm.doc.items && frm.doc.items.length > 0) {
+            frm.doc.set_warehouse = frm.doc.items[0].warehouse;
+        }
+    }
 });
 
 
