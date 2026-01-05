@@ -120,7 +120,8 @@
   {
    "fieldname": "payable_at",
    "fieldtype": "Select",
-   "label": "Payable At"
+   "label": "Payable At",
+   "options": "\nDelhi\nMumbai\nOthers"
   },
   {
    "fieldname": "payment_by",
@@ -151,7 +152,6 @@
    "fieldname": "cha",
    "fieldtype": "Link",
    "label": "CHA",
-   "link_filters": "[[\"Supplier\",\"supplier_group\",\"=\",\"CHA\"]]",
    "options": "Supplier"
   },
   {
@@ -400,7 +400,7 @@
    "link_fieldname": "custom_payment_requisition"
   }
  ],
- "modified": "2025-12-04 10:50:20.810551",
+ "modified": "2026-01-05 09:41:26.600024",
  "modified_by": "Administrator",
  "module": "Import",
  "name": "Payment Requisition",
