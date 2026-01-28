@@ -258,13 +258,16 @@ class PaymentRequisition(Document):
         # ---------------------------
         if igst_amount > 0:
             je.append("accounts", {
-                "account": customs_duty_expense_account,
+                "account": "22451700 - IGST RECEIVABLE (IMPORT) - MCPL",
                 "debit_in_account_currency": igst_amount,
                 "cost_center": getattr(self, "cost_center", None),
                 "custom_bill_of_entry_no": self.boe_no,
                 "custom_bill_of_entry_date": self.boe_date,
                 "custom_port_code": port_code
             })
+
+        
+
 
         # ---------------------------
         # Credit Entry – Duty Payable
