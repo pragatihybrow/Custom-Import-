@@ -95,19 +95,20 @@
   {
    "fieldname": "favoring_of",
    "fieldtype": "Link",
+   "hidden": 1,
    "label": "Favoring Of",
    "options": "Supplier"
   },
   {
    "fieldname": "origin",
    "fieldtype": "Link",
-   "label": "Origin",
+   "label": "Country Of Origin",
    "options": "Country"
   },
   {
    "fieldname": "consignment",
    "fieldtype": "Link",
-   "label": "Consignment",
+   "label": "Country of Consignment",
    "options": "Country"
   },
   {
@@ -402,7 +403,7 @@
    "link_fieldname": "custom_payment_requisition"
   }
  ],
- "modified": "2026-01-28 10:44:26.374979",
+ "modified": "2026-03-06 15:22:22.526396",
  "modified_by": "Administrator",
  "module": "Import",
  "name": "Payment Requisition",
