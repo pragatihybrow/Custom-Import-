@@ -289,6 +289,27 @@ doc_events = {
     # },
     "Journal Entry": {
         "before_cancel": "import.config.py.journal_entry.remove_payment_requisition_link"
-    }
+    },
+#     "File": {
+#     "after_insert": "import.config.py.file.before_insert",
+#     "on_trash": "import.config.py.file.on_trash",
+# },
 
+}
+website_route_rules = [
+    {"from_route": "/supplier-quotation-link/<key>", "to_route": "supplier_quotation_link"},
+    
+]
+
+
+
+scheduler_events = {
+    "daily": [
+        "import.config.py.rfq.expire_old_links"
+    ]
+}
+
+
+override_doctype_class = {
+    "File": "import.config.py.file.CustomFile",
 }
