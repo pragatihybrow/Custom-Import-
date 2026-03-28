@@ -41,7 +41,7 @@
   "assessable_value",
   "deferred_duty_amt",
   "cargo_type",
-  "boe_no",
+  "custom_boe_no_details",
   "boe_date",
   "deferred_duty",
   "remarks",
@@ -217,7 +217,7 @@
    "options": "Type Of Cargo"
   },
   {
-   "fieldname": "boe_no",
+   "fieldname": "custom_boe_no_details",
    "fieldtype": "Link",
    "label": "BOE No",
    "options": "BOE"
