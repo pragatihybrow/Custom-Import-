@@ -1,6 +1,6 @@
 # Copyright (c) 2025, Pragati Dike
 # For license information, please see license.txt
-
+2
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -231,7 +231,7 @@ class PaymentRequisition(Document):
         je.company = self.company
         je.user_remark = (
             f"Being Duty payable against {self.name}, Job No. {self.job_no or ''}, "
-            f"PO No. {po_numbers}, BE No. {self.boe_no or ''} Dt. {self.boe_date or ''}"
+            f"PO No. {po_numbers}, BE No. {self.custom_boe_no_details or ''} Dt. {self.boe_date or ''}"
         )
         je.cheque_no = self.name
         je.cheque_date = self.posting_date
@@ -248,7 +248,7 @@ class PaymentRequisition(Document):
                 "account": customs_duty_expense_account,
                 "debit_in_account_currency": other_duties,
                 "cost_center": getattr(self, "cost_center", None),
-                "custom_bill_of_entry_no": self.boe_no,
+                "custom_bill_of_entry_no": self.custom_boe_no_details,
                 "custom_bill_of_entry_date": self.boe_date,
                 "custom_port_code": port_code
             })
@@ -261,7 +261,7 @@ class PaymentRequisition(Document):
                 "account": "22451700 - IGST RECEIVABLE (IMPORT) - MCPL",
                 "debit_in_account_currency": igst_amount,
                 "cost_center": getattr(self, "cost_center", None),
-                "custom_bill_of_entry_no": self.boe_no,
+                "custom_bill_of_entry_no": self.custom_boe_no_details,
                 "custom_bill_of_entry_date": self.boe_date,
                 "custom_port_code": port_code
             })
@@ -295,7 +295,7 @@ class PaymentRequisition(Document):
 
         # Add BOE + Port details
         credit_entry.update({
-            "custom_bill_of_entry_no": self.boe_no,
+            "custom_bill_of_entry_no": self.custom_boe_no_details,
             "custom_bill_of_entry_date": self.boe_date,
             "custom_port_code": port_code
         })
