@@ -34,6 +34,7 @@
   "duty_amount_in_word",
   "specific_remark",
   "bill_of_entry_created",
+  "aws",
   "section_break_oepz",
   "attach_document",
   "items",
@@ -42,6 +43,7 @@
   "deferred_duty_amt",
   "cargo_type",
   "boe_no",
+  "boe_number",
   "boe_date",
   "deferred_duty",
   "remarks",
@@ -329,10 +331,10 @@
   },
   {
    "fieldname": "pickup_request",
-   "fieldtype": "Link",
+   "fieldtype": "Table MultiSelect",
    "label": "Pickup Request",
    "no_copy": 1,
-   "options": "Pickup Request",
+   "options": "Pickup Request CT",
    "print_hide": 1
   },
   {
@@ -392,6 +394,17 @@
    "label": "Payment To",
    "options": "Supplier",
    "reqd": 1
+  },
+  {
+   "fieldname": "boe_number",
+   "fieldtype": "Data",
+   "label": "BOE Number",
+   "options": "BOE"
+  },
+  {
+   "fieldname": "aws",
+   "fieldtype": "Data",
+   "label": "AWS"
   }
  ],
  "grid_page_length": 50,
@@ -403,11 +416,11 @@
    "link_fieldname": "custom_payment_requisition"
   }
  ],
- "modified": "2026-03-06 15:22:22.526396",
- "modified_by": "Administrator",
+ "modified": "2026-04-01 15:20:15.900707",
+ "modified_by": "pragati@gmail.com",
  "module": "Import",
  "name": "Payment Requisition",
- "naming_rule": "Expression",
+ "naming_rule": "Expression (old style)",
  "owner": "Administrator",
  "permissions": [
   {
