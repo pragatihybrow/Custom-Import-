@@ -3,43 +3,86 @@
 
 frappe.ui.form.on('Pickup Request', {
     refresh: function(frm) {
-        if (frm.doc.docstatus === 1) {
-            frm.add_custom_button(
-                __('Payment Requisition'),
-                function () {
-                    frappe.model.with_doctype('Payment Requisition', function() {
-                        let payment_req = frappe.model.get_new_doc('Payment Requisition');
-                        
-                        // Set basic fields from Pickup Request
-                        payment_req.pickup_request = frm.doc.name;
-                        payment_req.company = frm.doc.company;
-                        payment_req.mode_of_shipment = frm.doc.mode_of_shipment;
-                        payment_req.origin = frm.doc.country_origin;
-                        payment_req.cargo_type = frm.doc.type_of_cargo;
-                        
-                        // Copy PO/WO details from po_no child table
-                        if (frm.doc.po_no && frm.doc.po_no.length > 0) {
-                            frm.doc.po_no.forEach(function(po) {
-                                let po_row = frappe.model.add_child(payment_req, 'PO CT', 'po_wono');
-                                po_row.purchase_order = po.purchase_order;
-                            });
-                        }
-                        
-                        // Copy supplier details from name_of_supplier child table
-                        if (frm.doc.name_of_supplier && frm.doc.name_of_supplier.length > 0) {
-                            frm.doc.name_of_supplier.forEach(function(supplier) {
-                                let supplier_row = frappe.model.add_child(payment_req, 'Supplier CT', 'supplier_name');
-                                supplier_row.supplier = supplier.supplier;
-                            });
-                        }
-                        
-                        // Show the new Payment Requisition form
-                        frappe.set_route('Form', 'Payment Requisition', payment_req.name);
+    if (frm.doc.docstatus === 1) {
+        frm.add_custom_button(__('Payment Requisition'), function () {
+
+            frappe.model.with_doctype('Payment Requisition', function() {
+
+                let payment_req = frappe.model.get_new_doc('Payment Requisition');
+
+                // ------------------------
+                // Basic Fields
+                // ------------------------
+                payment_req.company = frm.doc.company;
+                payment_req.mode_of_shipment = frm.doc.mode_of_shipment;
+                payment_req.origin = frm.doc.country_origin;
+                payment_req.cargo_type = frm.doc.type_of_cargo;
+
+                // ------------------------
+                // Pickup Request (Table MultiSelect)
+                // ------------------------
+                let pickup_row = frappe.model.add_child(
+                    payment_req,
+                    'Pickup Request CT',
+                    'pickup_request'
+                );
+                pickup_row.pickup_request = frm.doc.name;
+
+                // ------------------------
+                // PO / WO Table
+                // ------------------------
+                if (frm.doc.po_no && frm.doc.po_no.length > 0) {
+                    frm.doc.po_no.forEach(function(po) {
+                        let po_row = frappe.model.add_child(
+                            payment_req,
+                            'PO CT',
+                            'po_wono'
+                        );
+                        po_row.purchase_order = po.purchase_order;
                     });
-                },
-                __('Create')
-            );
-        }
+                }
+
+                // ------------------------
+                // Supplier Table
+                // ------------------------
+                if (frm.doc.name_of_supplier && frm.doc.name_of_supplier.length > 0) {
+                    frm.doc.name_of_supplier.forEach(function(supplier) {
+                        let supplier_row = frappe.model.add_child(
+                            payment_req,
+                            'Supplier CT',
+                            'supplier_name'
+                        );
+                        supplier_row.supplier = supplier.supplier;
+                    });
+                }
+
+                // ------------------------
+                // Items Table (FIXED)
+                // ------------------------
+                if (frm.doc.purchase_order_details && frm.doc.purchase_order_details.length > 0) {
+                    frm.doc.purchase_order_details.forEach(function(item) {
+                        let item_row = frappe.model.add_child(
+                            payment_req,
+                            'Payment Requisition CT',
+                            'items'
+                        );
+
+                        item_row.item = item.item;             
+                        item_row.description = item.material;    
+                        item_row.pickup_request = frm.doc.name;  
+                    });
+                }
+
+                // ------------------------
+                // Sync + Route
+                // ------------------------
+                frappe.model.sync(payment_req);
+                frappe.set_route('Form', 'Payment Requisition', payment_req.name);
+
+            });
+
+        }, __('Create'));
+    }
 
         if (frm.doc.docstatus == 1) {
             frm.add_custom_button('Create RFQ', () => {
