@@ -10,9 +10,12 @@
   "naming_series",
   "po_no",
   "boe_number",
+  "payment_requisition",
   "column_break_gvpd",
   "vendor",
   "currency",
+  "attach_boe",
+  "amended_from",
   "column_break_tqax",
   "pickup_request",
   "exchange_rate",
@@ -44,11 +47,7 @@
   "column_break_bryi",
   "penalty_vendor",
   "column_break_bnpv",
-  "penalty_reason",
-  "attach_document_tab",
-  "attach_document",
-  "status",
-  "amended_from"
+  "penalty_reason"
  ],
  "fields": [
   {
@@ -78,9 +77,9 @@
   },
   {
    "fieldname": "pickup_request",
-   "fieldtype": "Link",
+   "fieldtype": "Table MultiSelect",
    "label": "Pickup Request",
-   "options": "Pickup Request"
+   "options": "Pickup Request CT"
   },
   {
    "fieldname": "currency",
@@ -234,24 +233,6 @@
    "label": "Penalty Reason"
   },
   {
-   "fieldname": "attach_document_tab",
-   "fieldtype": "Tab Break",
-   "label": "Attach Document"
-  },
-  {
-   "fieldname": "attach_document",
-   "fieldtype": "Table",
-   "hidden": 1,
-   "label": "Attach Document",
-   "options": "Attach Document"
-  },
-  {
-   "fieldname": "status",
-   "fieldtype": "Select",
-   "label": "Status",
-   "options": "\nDraft\nSubmitted\nTo Bill"
-  },
-  {
    "fieldname": "amended_from",
    "fieldtype": "Link",
    "label": "Amended From",
@@ -300,14 +281,26 @@
    "fieldname": "boe_number",
    "fieldtype": "Data",
    "label": "BOE Number"
+  },
+  {
+   "fieldname": "attach_boe",
+   "fieldtype": "Attach",
+   "label": "Attach BOE"
+  },
+  {
+   "fieldname": "payment_requisition",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Payment Requisition",
+   "options": "Payment Requisition"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-03-06 15:19:14.771432",
- "modified_by": "Administrator",
+ "modified": "2026-04-01 14:16:52.010055",
+ "modified_by": "pragati@gmail.com",
  "module": "Import",
  "name": "BOE",
  "naming_rule": "By \"Naming Series\" field",
