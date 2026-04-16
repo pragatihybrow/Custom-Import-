@@ -264,10 +264,10 @@ class PaymentRequisition(Document):
 
     def unmark_pickup_request_processed(self):
         """Unmark all linked Pickup Requests when cancelled"""
-            for row in self.pickup_request_ct:
+        for row in self.pickup_request_ct:
             if row.pickup_request:
                 frappe.db.set_value('Pickup Request', row.pickup_request, 'po_updated', 0)
-
+                
     def doc_attachment(self):
         """Validate minimum 3 required documents for Manager Approval"""
         if self.workflow_state == "Sent For Manager Approval":
