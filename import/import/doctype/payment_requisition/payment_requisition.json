@@ -44,7 +44,7 @@
   "deferred_duty_amt",
   "cargo_type",
   "boe_no",
-  "custom_boe_no_details",
+  "boe_details",
   "boe_number",
   "boe_date",
   "deferred_duty",
@@ -419,9 +419,9 @@
    "print_hide": 1
   },
   {
-   "fieldname": "custom_boe_no_details",
+   "fieldname": "boe_details",
    "fieldtype": "Link",
-   "label": "BOE NO Details",
+   "label": "BOE Details",
    "options": "BOE",
    "read_only": 1
   }
@@ -435,7 +435,7 @@
    "link_fieldname": "custom_payment_requisition"
   }
  ],
- "modified": "2026-04-16 12:04:57.577035",
+ "modified": "2026-04-28 10:33:58.219132",
  "modified_by": "Administrator",
  "module": "Import",
  "name": "Payment Requisition",

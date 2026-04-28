@@ -44,86 +44,6 @@ class PaymentRequisition(Document):
 
     # ---------------- Helper Methods ---------------- #
 
-    # def send_mail(self):
-    #     """Send formatted email when Payment Requisition is submitted."""
-    #     if not self.name:
-    #         return
-
-    #     from frappe.utils import formatdate, fmt_money, get_url_to_form
-
-    #     # Format PO/WO values
-    #     po_wo_no = ", ".join([row.purchase_order for row in self.po_wono]) if getattr(self, "po_wono", None) else ""
-
-    #     # Handle supplier_name as child table (Table MultiSelect)
-    #     supplier_names = (
-    #         ", ".join([row.supplier for row in self.supplier_name])
-    #         if getattr(self, "supplier_name", None) and len(self.supplier_name) > 0
-    #         else ""
-    #     )
-
-    #     # Handle pickup_request as child table — list all linked PRs in email
-    #     pickup_request_names = (
-    #         ", ".join([row.pickup_request for row in self.pickup_request if row.pickup_request])
-    #         if getattr(self, "pickup_request", None) and len(self.pickup_request) > 0
-    #         else ""
-    #     )
-
-    #     po_wo_date = formatdate(self.get("po_wo_date") or frappe.utils.nowdate(), "dd/MM/yyyy")
-
-    #     # Get all users with Accounts Manager role
-    #     accounts_manager_users = [
-    #         d.parent for d in frappe.get_all("Has Role", filters={"role": "Accounts Manager"}, fields=["parent"])
-    #     ]
-    #     recipients = [
-    #         u.email for u in frappe.get_all(
-    #             "User",
-    #             filters={"name": ["in", accounts_manager_users], "enabled": 1},
-    #             fields=["email"]
-    #         ) if u.email
-    #     ]
-
-    #     subject = f"Payment Request No : {self.name} | Kindly release payment"
-
-    #     message = f"""
-    #     <p>Dear Sir/Ma'am,</p>
-    #     <p>Kindly release the payment as per below request.</p>
-    #     <table style="border-collapse: collapse; width: auto; font-family: Arial, sans-serif;">
-    #         <tr><td style="border:1px solid #ccc; padding:6px;"><b>Payment Request No :</b></td><td style="border:1px solid #ccc; padding:6px;">{self.name}</td></tr>
-    #         <tr><td style="border:1px solid #ccc; padding:6px;"><b>Payment Request Date :</b></td><td style="border:1px solid #ccc; padding:6px;">{formatdate(self.creation, "dd/MM/yyyy")}</td></tr>
-    #         <tr><td style="border:1px solid #ccc; padding:6px;"><b>Pickup Request(s) :</b></td><td style="border:1px solid #ccc; padding:6px;">{pickup_request_names}</td></tr>
-    #         <tr><td style="border:1px solid #ccc; padding:6px;"><b>Favoring Of :</b></td><td style="border:1px solid #ccc; padding:6px;">{self.favoring_of or ''}</td></tr>
-    #         <tr><td style="border:1px solid #ccc; padding:6px;"><b>Country of Origin :</b></td><td style="border:1px solid #ccc; padding:6px;">{self.origin or ''}</td></tr>
-    #         <tr><td style="border:1px solid #ccc; padding:6px;"><b>Country Of Consignment :</b></td><td style="border:1px solid #ccc; padding:6px;">{self.consignment or ''}</td></tr>
-    #         <tr><td style="border:1px solid #ccc; padding:6px;"><b>Mode Of Shipment :</b></td><td style="border:1px solid #ccc; padding:6px;">{self.mode_of_shipment or ''}</td></tr>
-    #         <tr><td style="border:1px solid #ccc; padding:6px;"><b>Payable At :</b></td><td style="border:1px solid #ccc; padding:6px;">{self.payable_at or ''}</td></tr>
-    #         <tr><td style="border:1px solid #ccc; padding:6px;"><b>Payment By :</b></td><td style="border:1px solid #ccc; padding:6px;">{self.payment_by or ''}</td></tr>
-    #         <tr><td style="border:1px solid #ccc; padding:6px;"><b>Payment Required :</b></td><td style="border:1px solid #ccc; padding:6px;">{self.payment_required or ''}</td></tr>
-    #         <tr><td style="border:1px solid #ccc; padding:6px;"><b>PO/WO No :</b></td><td style="border:1px solid #ccc; padding:6px;">{po_wo_no}</td></tr>
-    #         <tr><td style="border:1px solid #ccc; padding:6px;"><b>PO/WO Date :</b></td><td style="border:1px solid #ccc; padding:6px;">{po_wo_date}</td></tr>
-    #         <tr><td style="border:1px solid #ccc; padding:6px;"><b>Material Type :</b></td><td style="border:1px solid #ccc; padding:6px;">{self.type_of_materials or ''}</td></tr>
-    #         <tr><td style="border:1px solid #ccc; padding:6px;"><b>Supplier Name :</b></td><td style="border:1px solid #ccc; padding:6px;">{supplier_names}</td></tr>
-    #         <tr><td style="border:1px solid #ccc; padding:6px;"><b>Amount :</b></td><td style="border:1px solid #ccc; padding:6px;">{fmt_money(self.duty_amount)}</td></tr>
-    #         <tr><td style="border:1px solid #ccc; padding:6px;"><b>Amount in Words :</b></td><td style="border:1px solid #ccc; padding:6px;">{self.duty_amount_in_word or ''}</td></tr>
-    #         <tr><td style="border:1px solid #ccc; padding:6px;"><b>Special Remark :</b></td><td style="border:1px solid #ccc; padding:6px;">{self.specific_remark or ''}</td></tr>
-    #     </table>
-    #     <br>
-    #     <p>Please click the below link for more details:</p>
-    #     <p><a href="{get_url_to_form('Journal Entry', self.journal_entry)}" target="_blank">View Journal Entry</a></p>
-    #     <br>
-    #     <p>Thanking you,<br>{frappe.session.user_fullname}</p>
-    #     """
-
-    #     frappe.sendmail(
-    #         recipients=recipients,
-    #         subject=subject,
-    #         message=message,
-    #         delayed=False,
-    #         reference_doctype=self.doctype,
-    #         reference_name=self.name,
-    #     )
-
-    #     frappe.msgprint("📨 Email notification sent successfully to Accounts Manager(s).")
-
     def send_mail(self):
         """Send formatted email when Payment Requisition is submitted."""
         if not self.name:
@@ -131,23 +51,26 @@ class PaymentRequisition(Document):
 
         from frappe.utils import formatdate, fmt_money, get_url_to_form
 
+        # Format PO/WO values
         po_wo_no = ", ".join([row.purchase_order for row in self.po_wono]) if getattr(self, "po_wono", None) else ""
 
+        # Handle supplier_name as child table (Table MultiSelect)
         supplier_names = (
             ", ".join([row.supplier for row in self.supplier_name])
             if getattr(self, "supplier_name", None) and len(self.supplier_name) > 0
             else ""
         )
 
-        # UPDATED: changed self.pickup_request to self.pickup_request_ct
+        # Handle pickup_request as child table — list all linked PRs in email
         pickup_request_names = (
-            ", ".join([row.pickup_request for row in self.pickup_request_ct if row.pickup_request])
-            if getattr(self, "pickup_request_ct", None) and len(self.pickup_request_ct) > 0
+            ", ".join([row.pickup_request for row in self.pickup_request if row.pickup_request])
+            if getattr(self, "pickup_request", None) and len(self.pickup_request) > 0
             else ""
         )
 
         po_wo_date = formatdate(self.get("po_wo_date") or frappe.utils.nowdate(), "dd/MM/yyyy")
 
+        # Get all users with Accounts Manager role
         accounts_manager_users = [
             d.parent for d in frappe.get_all("Has Role", filters={"role": "Accounts Manager"}, fields=["parent"])
         ]
@@ -201,40 +124,12 @@ class PaymentRequisition(Document):
 
         frappe.msgprint("📨 Email notification sent successfully to Accounts Manager(s).")
 
-    # def check_duplicate_pickup_request(self):
-    #     """Ensure no Pickup Request is already used in another active Payment Requisition"""
-    #     if not self.pickup_request:
-    #         return
-
-    #     for row in self.pickup_request:
-    #         pr_name = row.pickup_request
-    #         if not pr_name:
-    #             continue
-
-    #         existing = frappe.db.sql("""
-    #             SELECT prc.parent
-    #             FROM `tabPickup Request CT` prc
-    #             JOIN `tabPayment Requisition` pr ON pr.name = prc.parent
-    #             WHERE prc.pickup_request = %s
-    #               AND pr.docstatus != 2
-    #               AND pr.name != %s
-    #             LIMIT 1
-    #         """, (pr_name, self.name), as_dict=1)
-
-    #         if existing:
-    #             frappe.throw(
-    #                 _('Pickup Request {0} is already linked to Payment Requisition {1}').format(
-    #                     pr_name, existing[0].parent
-    #                 )
-    #             )
-
     def check_duplicate_pickup_request(self):
         """Ensure no Pickup Request is already used in another active Payment Requisition"""
-
-        if not self.pickup_request_ct:
+        if not self.pickup_request:
             return
 
-        for row in self.pickup_request_ct:
+        for row in self.pickup_request:
             pr_name = row.pickup_request
             if not pr_name:
                 continue
@@ -244,8 +139,8 @@ class PaymentRequisition(Document):
                 FROM `tabPickup Request CT` prc
                 JOIN `tabPayment Requisition` pr ON pr.name = prc.parent
                 WHERE prc.pickup_request = %s
-                AND pr.docstatus != 2
-                AND pr.name != %s
+                  AND pr.docstatus != 2
+                  AND pr.name != %s
                 LIMIT 1
             """, (pr_name, self.name), as_dict=1)
 
@@ -258,16 +153,16 @@ class PaymentRequisition(Document):
 
     def mark_pickup_request_processed(self):
         """Mark all linked Pickup Requests as processed on submit"""
-        for row in self.pickup_request_ct:
+        for row in self.pickup_request:
             if row.pickup_request:
                 frappe.db.set_value('Pickup Request', row.pickup_request, 'po_updated', 1)
 
     def unmark_pickup_request_processed(self):
         """Unmark all linked Pickup Requests when cancelled"""
-        for row in self.pickup_request_ct:
+        for row in self.pickup_request:
             if row.pickup_request:
                 frappe.db.set_value('Pickup Request', row.pickup_request, 'po_updated', 0)
-                
+
     def doc_attachment(self):
         """Validate minimum 3 required documents for Manager Approval"""
         if self.workflow_state == "Sent For Manager Approval":
@@ -292,130 +187,6 @@ class PaymentRequisition(Document):
                     f"Currently found: {matched_count}"
                 )
 
-    # def create_customs_duty_journal_entry(self):
-    #     """Auto-create a Journal Entry for Customs Duty on submit"""
-    #     from frappe.utils import flt, nowdate
-
-    #     total_customs_duty = (
-    #         flt(self.bcd)
-    #         + flt(self.igst)
-    #         + flt(self.health_cess)
-    #         + flt(self.sw_surcharge)
-    #     )
-
-    #     if total_customs_duty <= 0:
-    #         frappe.msgprint(_("No Customs Duty amount found, Journal Entry not created."))
-    #         return
-
-    #     # Get company details
-    #     company = frappe.get_doc("Company", self.company)
-    #     company_abbr = company.abbr
-    #     customs_duty_expense_account = f"Customs Duty Expense - {company_abbr}"
-
-    #     # Get Payable Account dynamically from Company
-    #     duty_payable_account = company.default_customs_expense_account
-    #     if not duty_payable_account:
-    #         frappe.throw(_("Please set 'Default Customs Expense Account' in Company {0}.").format(self.company))
-
-    #     account_type = frappe.db.get_value("Account", duty_payable_account, "account_type")
-
-    #     # Build comma-separated PO numbers
-    #     po_list = []
-    #     if hasattr(self, "po_wono") and self.po_wono:
-    #         po_list = [d.purchase_order for d in self.po_wono if d.purchase_order]
-    #     po_numbers = ", ".join(po_list) if po_list else "N/A"
-
-    #     # Fetch port code from first linked Pickup Request
-    #     port_code = None
-    #     if self.pickup_request and len(self.pickup_request) > 0:
-    #         first_pr = self.pickup_request[0].pickup_request
-    #         if first_pr:
-    #             port_code = frappe.db.get_value(
-    #                 "Pickup Request", first_pr, "port_of_destination_pod"
-    #             )
-
-    #     # Build pickup request names for remark
-    #     pr_names = ", ".join(
-    #         [row.pickup_request for row in self.pickup_request if row.pickup_request]
-    #     ) if self.pickup_request else ""
-
-    #     # Create Journal Entry
-    #     je = frappe.new_doc("Journal Entry")
-    #     je.voucher_type = "Journal Entry"
-    #     je.posting_date = nowdate()
-    #     je.custom_payment_requisition = self.name
-    #     je.company = self.company
-    #     je.user_remark = (
-    #         f"Being Duty payable against {self.name}, Job No. {self.job_no or ''}, "
-    #         f"PO No. {po_numbers}, BE No. {self.boe_no or ''} Dt. {self.boe_date or ''}"
-    #     )
-    #     je.cheque_no = self.name
-    #     je.cheque_date = self.posting_date
-
-    #     # Duty Splits
-    #     igst_amount = flt(self.igst)
-    #     other_duties = flt(self.bcd) + flt(self.health_cess) + flt(self.sw_surcharge)
-
-    #     # Debit Entry – Other Duties
-    #     if other_duties > 0:
-    #         je.append("accounts", {
-    #             "account": customs_duty_expense_account,
-    #             "debit_in_account_currency": other_duties,
-    #             "cost_center": getattr(self, "cost_center", None),
-    #             "custom_bill_of_entry_no": self.boe_no,
-    #             "custom_bill_of_entry_date": self.boe_date,
-    #             "custom_port_code": port_code
-    #         })
-
-    #     # Debit Entry – IGST
-    #     if igst_amount > 0:
-    #         je.append("accounts", {
-    #             "account": "22451700 - IGST RECEIVABLE (IMPORT) - MCPL",
-    #             "debit_in_account_currency": igst_amount,
-    #             "cost_center": getattr(self, "cost_center", None),
-    #             "custom_bill_of_entry_no": self.boe_no,
-    #             "custom_bill_of_entry_date": self.boe_date,
-    #             "custom_port_code": port_code
-    #         })
-
-    #     # Credit Entry – Duty Payable
-    #     credit_entry = {
-    #         "account": duty_payable_account,
-    #         "credit_in_account_currency": total_customs_duty,
-    #     }
-
-    #     # Set party — prefer payment_to, fallback to first supplier in child table
-    #     if getattr(self, "payment_to", None):
-    #         credit_entry.update({
-    #             "party_type": "Supplier",
-    #             "party": self.payment_to
-    #         })
-    #     elif account_type == "Payable" and getattr(self, "supplier_name", None):
-    #         if len(self.supplier_name) > 0:
-    #             first_supplier = self.supplier_name[0].supplier
-    #             if first_supplier:
-    #                 credit_entry.update({
-    #                     "party_type": "Supplier",
-    #                     "party": first_supplier
-    #                 })
-
-    #     credit_entry.update({
-    #         "custom_bill_of_entry_no": self.boe_no,
-    #         "custom_bill_of_entry_date": self.boe_date,
-    #         "custom_port_code": port_code
-    #     })
-
-    #     je.append("accounts", credit_entry)
-
-    #     je.insert(ignore_permissions=True)
-
-    #     self.db_set("journal_entry", je.name)
-
-    #     frappe.msgprint(
-    #         f"✅ Journal Entry <a href='/app/journal-entry/{je.name}'>{je.name}</a> created for Customs Duty."
-    #     )
-
-
     def create_customs_duty_journal_entry(self):
         """Auto-create a Journal Entry for Customs Duty on submit"""
         from frappe.utils import flt, nowdate
@@ -431,35 +202,39 @@ class PaymentRequisition(Document):
             frappe.msgprint(_("No Customs Duty amount found, Journal Entry not created."))
             return
 
+        # Get company details
         company = frappe.get_doc("Company", self.company)
         company_abbr = company.abbr
         customs_duty_expense_account = f"Customs Duty Expense - {company_abbr}"
 
+        # Get Payable Account dynamically from Company
         duty_payable_account = company.default_customs_expense_account
         if not duty_payable_account:
             frappe.throw(_("Please set 'Default Customs Expense Account' in Company {0}.").format(self.company))
 
         account_type = frappe.db.get_value("Account", duty_payable_account, "account_type")
 
+        # Build comma-separated PO numbers
         po_list = []
         if hasattr(self, "po_wono") and self.po_wono:
             po_list = [d.purchase_order for d in self.po_wono if d.purchase_order]
         po_numbers = ", ".join(po_list) if po_list else "N/A"
 
-        # UPDATED: changed self.pickup_request to self.pickup_request_ct
+        # Fetch port code from first linked Pickup Request
         port_code = None
-        if self.pickup_request_ct and len(self.pickup_request_ct) > 0:
-            first_pr = self.pickup_request_ct[0].pickup_request
+        if self.pickup_request and len(self.pickup_request) > 0:
+            first_pr = self.pickup_request[0].pickup_request
             if first_pr:
                 port_code = frappe.db.get_value(
                     "Pickup Request", first_pr, "port_of_destination_pod"
                 )
 
-        # UPDATED: changed self.pickup_request to self.pickup_request_ct
+        # Build pickup request names for remark
         pr_names = ", ".join(
-            [row.pickup_request for row in self.pickup_request_ct if row.pickup_request]
-        ) if self.pickup_request_ct else ""
+            [row.pickup_request for row in self.pickup_request if row.pickup_request]
+        ) if self.pickup_request else ""
 
+        # Create Journal Entry
         je = frappe.new_doc("Journal Entry")
         je.voucher_type = "Journal Entry"
         je.posting_date = nowdate()
@@ -467,39 +242,44 @@ class PaymentRequisition(Document):
         je.company = self.company
         je.user_remark = (
             f"Being Duty payable against {self.name}, Job No. {self.job_no or ''}, "
-            f"PO No. {po_numbers}, BE No. {self.custom_boe_no_details or ''} Dt. {self.boe_date or ''}"
+            f"PO No. {po_numbers}, BE No. {self.boe_details or ''} Dt. {self.boe_date or ''}"
         )
         je.cheque_no = self.name
         je.cheque_date = self.posting_date
 
+        # Duty Splits
         igst_amount = flt(self.igst)
         other_duties = flt(self.bcd) + flt(self.health_cess) + flt(self.sw_surcharge)
 
+        # Debit Entry – Other Duties
         if other_duties > 0:
             je.append("accounts", {
                 "account": customs_duty_expense_account,
                 "debit_in_account_currency": other_duties,
                 "cost_center": getattr(self, "cost_center", None),
-                "custom_bill_of_entry_no": self.custom_boe_no_details,
+                "custom_bill_of_entry_no": self.boe_details,
                 "custom_bill_of_entry_date": self.boe_date,
                 "custom_port_code": port_code
             })
 
+        # Debit Entry – IGST
         if igst_amount > 0:
             je.append("accounts", {
                 "account": "22451700 - IGST RECEIVABLE (IMPORT) - MCPL",
                 "debit_in_account_currency": igst_amount,
                 "cost_center": getattr(self, "cost_center", None),
-                "custom_bill_of_entry_no": self.custom_boe_no_details,
+                "custom_bill_of_entry_no": self.boe_details,
                 "custom_bill_of_entry_date": self.boe_date,
                 "custom_port_code": port_code
             })
 
+        # Credit Entry – Duty Payable
         credit_entry = {
             "account": duty_payable_account,
             "credit_in_account_currency": total_customs_duty,
         }
 
+        # Set party — prefer payment_to, fallback to first supplier in child table
         if getattr(self, "payment_to", None):
             credit_entry.update({
                 "party_type": "Supplier",
@@ -515,12 +295,13 @@ class PaymentRequisition(Document):
                     })
 
         credit_entry.update({
-            "custom_bill_of_entry_no": self.custom_boe_no_details,
+            "custom_bill_of_entry_no": self.boe_details,
             "custom_bill_of_entry_date": self.boe_date,
             "custom_port_code": port_code
         })
 
         je.append("accounts", credit_entry)
+
         je.insert(ignore_permissions=True)
 
         self.db_set("journal_entry", je.name)
@@ -528,6 +309,8 @@ class PaymentRequisition(Document):
         frappe.msgprint(
             f"✅ Journal Entry <a href='/app/journal-entry/{je.name}'>{je.name}</a> created for Customs Duty."
         )
+
+
 # ---------------- Whitelisted Methods ---------------- #
 
 @frappe.whitelist()
