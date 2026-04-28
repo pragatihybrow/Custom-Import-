@@ -221,7 +221,7 @@
    "options": "Type Of Cargo"
   },
   {
-   "fieldname": "boe_no",
+   "fieldname": "custom_boe_no_details",
    "fieldtype": "Link",
    "label": "BOE No",
    "options": "BOE",
