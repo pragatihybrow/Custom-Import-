@@ -8,7 +8,6 @@
  "field_order": [
   "section_break_xo9s",
   "amended_from",
-  "pickup_request_ct",
   "pickup_request",
   "division",
   "payment_type",
@@ -334,12 +333,11 @@
   },
   {
    "fieldname": "pickup_request",
-   "fieldtype": "Link",
+   "fieldtype": "Table MultiSelect",
    "label": "Pickup Request",
    "no_copy": 1,
-   "options": "Pickup Request",
-   "print_hide": 1,
-   "read_only": 1
+   "options": "Pickup Request CT",
+   "print_hide": 1
   },
   {
    "fieldname": "section_break_oepz",
@@ -411,14 +409,6 @@
    "label": "AWS"
   },
   {
-   "fieldname": "pickup_request_ct",
-   "fieldtype": "Table MultiSelect",
-   "label": "Pickup Request",
-   "no_copy": 1,
-   "options": "Pickup Request CT",
-   "print_hide": 1
-  },
-  {
    "fieldname": "boe_details",
    "fieldtype": "Link",
    "label": "BOE Details",
@@ -435,7 +425,7 @@
    "link_fieldname": "custom_payment_requisition"
   }
  ],
- "modified": "2026-04-28 10:33:58.219132",
+ "modified": "2026-04-28 12:50:15.159458",
  "modified_by": "Administrator",
  "module": "Import",
  "name": "Payment Requisition",
