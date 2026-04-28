@@ -335,11 +335,10 @@
   {
    "fieldname": "pickup_request",
    "fieldtype": "Link",
-   "label": "Pickup Request",
+   "label": "Pickup Request CT",
    "no_copy": 1,
    "options": "Pickup Request",
-   "print_hide": 1,
-   "read_only": 1
+   "print_hide": 1
   },
   {
    "fieldname": "section_break_oepz",
@@ -435,7 +434,7 @@
    "link_fieldname": "custom_payment_requisition"
   }
  ],
- "modified": "2026-04-16 12:04:57.577035",
+ "modified": "2026-04-16 11:17:25.590495",
  "modified_by": "Administrator",
  "module": "Import",
  "name": "Payment Requisition",
