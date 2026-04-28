@@ -29,7 +29,7 @@ def update_payment_request(doc, method):
 
         # Set all fields directly on the doc
         pr_doc.bill_of_entry_created = 1
-        pr_doc.custom_boe_no_details = doc.name
+        pr_doc.boe_no = doc.name
         pr_doc.boe_date = doc.boe_date
         pr_doc.bcd = doc.bcd_amount
         pr_doc.igst = doc.igst_amount

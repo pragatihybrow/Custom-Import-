@@ -9,70 +9,75 @@ from frappe.utils import flt
 from frappe.model.document import Document
 from frappe.utils import nowdate
 
+# @frappe.whitelist()
+# def create_boe(payment_requisition):
+#     pr_doc = frappe.get_doc("Payment Requisition", payment_requisition)
+
+#     boe = frappe.new_doc("BOE")
+#     boe.pickup_request = pr_doc.pickup_request
+#     boe.cha = pr_doc.cha
+#     boe.boe_date = frappe.utils.nowdate()
+#     if hasattr(pr_doc, "po_wono"):
+#         for row in pr_doc.po_wono:
+#             boe.append("po_no", {"purchase_order": row.purchase_order})
+   
+#     if hasattr(pr_doc, "supplier_name"):
+#         for row in pr_doc.supplier_name:
+#             boe.append("vendor", {"supplier": row.supplier})
+#     elif getattr(pr_doc, "supplier_name", None):
+#         boe.append("vendor", {"supplier": pr_doc.supplier_name})
+
+#     boe.insert(ignore_permissions=True)
+
+#     # ✅ Submit immediately (not draft)
+#     # boe.submit()
+#     frappe.db.commit()
+
+#     return boe.name
+
+
 @frappe.whitelist()
 def create_boe(payment_requisition):
-    from frappe.utils import nowdate, flt
-
     pr_doc = frappe.get_doc("Payment Requisition", payment_requisition)
 
     boe = frappe.new_doc("BOE")
     boe.cha = pr_doc.cha
-    boe.boe_date = nowdate()
+    boe.boe_date = frappe.utils.nowdate()
     boe.payment_requisition = pr_doc.name
 
+    # ✅ Calculate total_inr_value as sum of base_total from all linked Pickup Requests
     total_inr_value = 0
 
-    # ✅ Pickup Requests
-    if hasattr(pr_doc, "pickup_request_ct") and pr_doc.pickup_request_ct:
-        for row in pr_doc.pickup_request_ct:
-            if row.pickup_request:
-                boe.append("pickup_request", {
-                    "pickup_request": row.pickup_request   # ✅ FIXED
-                })
-
-                # Calculate total INR value
-                try:
-                    pck_doc = frappe.get_doc("Pickup Request", row.pickup_request)
-                    total_inr_value += flt(getattr(pck_doc, "base_total", 0))
-                except Exception:
-                    frappe.log_error(frappe.get_traceback(), "BOE Pickup Fetch Error")
+    if hasattr(pr_doc, "pickup_request"):
+        for row in pr_doc.pickup_request:
+            boe.append("pickup_request", {"pickup_request": row.pickup_request})
+            try:
+                pck_doc = frappe.get_doc("Pickup Request", row.pickup_request)
+                total_inr_value += flt(getattr(pck_doc, "base_total", 0))
+            except Exception:
+                pass  # Skip if Pickup Request not found
 
     boe.total_inr_value = total_inr_value
 
-    # ✅ Purchase Orders
-    if hasattr(pr_doc, "po_wono") and pr_doc.po_wono:
+    if hasattr(pr_doc, "po_wono"):
         for row in pr_doc.po_wono:
-            if row.purchase_order:
-                boe.append("po_no", {
-                    "purchase_order": row.purchase_order
-                })
+            boe.append("po_no", {"purchase_order": row.purchase_order})
 
-    # ✅ Vendors (Suppliers)
-    if hasattr(pr_doc, "supplier_name") and pr_doc.supplier_name:
+    if hasattr(pr_doc, "supplier_name"):
         for row in pr_doc.supplier_name:
-            if row.supplier:
-                boe.append("vendor", {
-                    "supplier": row.supplier
-                })
+            boe.append("vendor", {"supplier": row.supplier})
+    elif getattr(pr_doc, "supplier_name", None):
+        boe.append("vendor", {"supplier": pr_doc.supplier_name})
 
-    # ✅ Insert BOE
     boe.insert(ignore_permissions=True)
     frappe.db.commit()
 
     return boe.name
 
+
+
 class BOE(Document):
-
-    def before_cancel(self):
-        if self.payment_requisition:
-            frappe.db.set_value(
-                "Payment Requisition",
-                self.payment_requisition,
-                "boe_no",
-                None
-            )
-
-        self.flags.ignore_links = True
+    pass
     # def validate(self):
     #     self.calculate_totals()
 

@@ -8,7 +8,6 @@
  "field_order": [
   "section_break_xo9s",
   "amended_from",
-  "pickup_request_ct",
   "pickup_request",
   "division",
   "payment_type",
@@ -44,7 +43,6 @@
   "deferred_duty_amt",
   "cargo_type",
   "boe_no",
-  "custom_boe_no_details",
   "boe_number",
   "boe_date",
   "deferred_duty",
@@ -224,8 +222,7 @@
    "fieldname": "boe_no",
    "fieldtype": "Link",
    "label": "BOE No",
-   "options": "BOE",
-   "read_only": 1
+   "options": "BOE"
   },
   {
    "fieldname": "boe_date",
@@ -334,10 +331,10 @@
   },
   {
    "fieldname": "pickup_request",
-   "fieldtype": "Link",
-   "label": "Pickup Request CT",
+   "fieldtype": "Table MultiSelect",
+   "label": "Pickup Request",
    "no_copy": 1,
-   "options": "Pickup Request",
+   "options": "Pickup Request CT",
    "print_hide": 1
   },
   {
@@ -408,21 +405,6 @@
    "fieldname": "aws",
    "fieldtype": "Data",
    "label": "AWS"
-  },
-  {
-   "fieldname": "pickup_request_ct",
-   "fieldtype": "Table MultiSelect",
-   "label": "Pickup Request",
-   "no_copy": 1,
-   "options": "Pickup Request CT",
-   "print_hide": 1
-  },
-  {
-   "fieldname": "custom_boe_no_details",
-   "fieldtype": "Link",
-   "label": "BOE NO Details",
-   "options": "BOE",
-   "read_only": 1
   }
  ],
  "grid_page_length": 50,
@@ -434,8 +416,8 @@
    "link_fieldname": "custom_payment_requisition"
   }
  ],
- "modified": "2026-04-16 11:17:25.590495",
- "modified_by": "Administrator",
+ "modified": "2026-04-01 15:20:15.900707",
+ "modified_by": "pragati@gmail.com",
  "module": "Import",
  "name": "Payment Requisition",
  "naming_rule": "Expression (old style)",
