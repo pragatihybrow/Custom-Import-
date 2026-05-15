@@ -242,7 +242,7 @@ class PaymentRequisition(Document):
         je.company = self.company
         je.user_remark = (
             f"Being Duty payable against {self.name}, Job No. {self.job_no or ''}, "
-            f"PO No. {po_numbers}, BE No. {self.boe_details or ''} Dt. {self.boe_date or ''}"
+            f"PO No. {po_numbers}, BE No. {self.boe_number or ''} Dt. {self.boe_date or ''}"
         )
         je.cheque_no = self.name
         je.cheque_date = self.posting_date
