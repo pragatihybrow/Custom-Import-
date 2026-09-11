@@ -2,7 +2,7 @@
  "actions": [],
  "allow_rename": 1,
  "autoname": "format:PRF/MCPL/{#################}",
- "creation": "2025-11-04 20:35:16.444077",
+ "creation": "2026-09-11 10:25:01.685993",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
@@ -66,7 +66,8 @@
   "tot_al",
   "section_break_ynwx",
   "approvalrejection_remark",
-  "custom_boe_no_details"
+  "custom_boe_no_details",
+  "amended_from"
  ],
  "fields": [
   {
@@ -84,34 +85,37 @@
    "search_index": 1
   },
   {
+   "fieldname": "pickup_request",
+   "fieldtype": "Table MultiSelect",
+   "label": "Pickup Request",
+   "no_copy": 1,
+   "options": "Pickup Request CT",
+   "print_hide": 1
+  },
+  {
    "fieldname": "division",
    "fieldtype": "Select",
    "label": "Division",
    "options": "\nMICRO CRISPR PRIVATE LIMITED"
   },
   {
-   "fieldname": "posting_date",
-   "fieldtype": "Date",
-   "label": "Payment Requested Date",
-   "read_only": 1
+   "fieldname": "payment_type",
+   "fieldtype": "Select",
+   "label": "Payment Type",
+   "options": "\nCustom Duty Payment\nGeneral Payment\nOther Duty Payment"
   },
   {
-   "fieldname": "favoring_of",
+   "fieldname": "payment_to",
    "fieldtype": "Link",
-   "hidden": 1,
-   "label": "Favoring Of",
-   "options": "Supplier"
+   "in_list_view": 1,
+   "label": "Payment To",
+   "options": "Supplier",
+   "reqd": 1
   },
   {
    "fieldname": "origin",
    "fieldtype": "Link",
    "label": "Country Of Origin",
-   "options": "Country"
-  },
-  {
-   "fieldname": "consignment",
-   "fieldtype": "Link",
-   "label": "Country of Consignment",
    "options": "Country"
   },
   {
@@ -122,22 +126,10 @@
    "read_only": 1
   },
   {
-   "fieldname": "payable_at",
-   "fieldtype": "Select",
-   "label": "Payable At",
-   "options": "\nDelhi\nMumbai\nOthers"
-  },
-  {
    "fieldname": "payment_by",
    "fieldtype": "Link",
    "label": "Payment By",
    "options": "Mode of Payment"
-  },
-  {
-   "fieldname": "payment_required",
-   "fieldtype": "Select",
-   "label": "Payment Required",
-   "options": "\nIMMEDIATELY"
   },
   {
    "fieldname": "po_wono",
@@ -145,24 +137,6 @@
    "label": "P.O. W.O.No",
    "options": "PO CT",
    "read_only": 1
-  },
-  {
-   "fieldname": "po_wo_date",
-   "fieldtype": "Date",
-   "label": "P.O. W.O. Date",
-   "read_only": 1
-  },
-  {
-   "fieldname": "cha",
-   "fieldtype": "Link",
-   "label": "CHA",
-   "options": "Supplier"
-  },
-  {
-   "fieldname": "type_of_materials",
-   "fieldtype": "Select",
-   "label": "Type of Materials ",
-   "options": "\nRaw Material\nR & D\nCapex Item\nConsumable\nOther"
   },
   {
    "fieldname": "supplier_name",
@@ -177,6 +151,77 @@
    "label": "Duty Amount"
   },
   {
+   "fieldname": "rodtep_details",
+   "fieldtype": "Select",
+   "label": "RODTEP Details"
+  },
+  {
+   "fieldname": "journal_entry",
+   "fieldtype": "Link",
+   "label": "Journal Entry",
+   "options": "Journal Entry",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_fixf",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "posting_date",
+   "fieldtype": "Date",
+   "label": "Payment Requested Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company"
+  },
+  {
+   "fieldname": "favoring_of",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Favoring Of",
+   "options": "Supplier"
+  },
+  {
+   "fieldname": "consignment",
+   "fieldtype": "Link",
+   "label": "Country of Consignment",
+   "options": "Country"
+  },
+  {
+   "fieldname": "payable_at",
+   "fieldtype": "Select",
+   "label": "Payable At",
+   "options": "\nDelhi\nMumbai\nOthers"
+  },
+  {
+   "fieldname": "payment_required",
+   "fieldtype": "Select",
+   "label": "Payment Required",
+   "options": "\nIMMEDIATELY"
+  },
+  {
+   "fieldname": "po_wo_date",
+   "fieldtype": "Date",
+   "label": "P.O. W.O. Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "type_of_materials",
+   "fieldtype": "Select",
+   "label": "Type of Materials ",
+   "options": "\nRaw Material\nR & D\nCapex Item\nConsumable\nOther"
+  },
+  {
+   "fieldname": "cha",
+   "fieldtype": "Link",
+   "label": "CHA",
+   "options": "Supplier"
+  },
+  {
    "fieldname": "job_no",
    "fieldtype": "Data",
    "label": "Job No"
@@ -188,14 +233,37 @@
    "read_only": 1
   },
   {
-   "fieldname": "rodtep_details",
-   "fieldtype": "Select",
-   "label": "RODTEP Details"
-  },
-  {
    "fieldname": "specific_remark",
    "fieldtype": "Data",
    "label": "Specific Remark"
+  },
+  {
+   "default": "0",
+   "fieldname": "bill_of_entry_created",
+   "fieldtype": "Check",
+   "label": "Bill Of Entry Created",
+   "read_only": 1
+  },
+  {
+   "fieldname": "aws",
+   "fieldtype": "Data",
+   "label": "AWS"
+  },
+  {
+   "fieldname": "section_break_oepz",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "attach_document",
+   "fieldtype": "Table",
+   "label": "Attach Document",
+   "options": "Attach Document"
+  },
+  {
+   "fieldname": "items",
+   "fieldtype": "Table",
+   "label": "Items",
+   "options": "Payment Requisition CT"
   },
   {
    "fieldname": "bill_of_entry_details_tab",
@@ -220,11 +288,16 @@
    "options": "Type Of Cargo"
   },
   {
-   "fieldname": "custom_boe_no_details",
+   "fieldname": "boe_details",
    "fieldtype": "Link",
-   "label": "BOE No",
-   "options": "BOE",
-   "read_only": 1
+   "label": "BOE Details",
+   "options": "BOE"
+  },
+  {
+   "fieldname": "boe_number",
+   "fieldtype": "Data",
+   "label": "BOE Number",
+   "options": "BOE"
   },
   {
    "fieldname": "boe_date",
@@ -240,12 +313,6 @@
    "fieldname": "remarks",
    "fieldtype": "Data",
    "label": "Remarks"
-  },
-  {
-   "fieldname": "period",
-   "fieldtype": "Select",
-   "label": "Period",
-   "options": "\n2025-26\n2026-27\n2027-28\n2028-29\n2029-30"
   },
   {
    "fieldname": "column_break_xdle",
@@ -282,6 +349,12 @@
    "label": "Total"
   },
   {
+   "fieldname": "period",
+   "fieldtype": "Select",
+   "label": "Period",
+   "options": "\n2025-26\n2026-27\n2027-28\n2028-29\n2029-30"
+  },
+  {
    "fieldname": "custom_duty_details_tab",
    "fieldtype": "Tab Break",
    "label": "Custom Duty Details"
@@ -303,6 +376,15 @@
    "label": "Date of Payment"
   },
   {
+   "fieldname": "difference",
+   "fieldtype": "Float",
+   "label": "Difference"
+  },
+  {
+   "fieldname": "column_break_vcxy",
+   "fieldtype": "Column Break"
+  },
+  {
    "fieldname": "interest_amount",
    "fieldtype": "Float",
    "label": "Interest Amount"
@@ -318,9 +400,8 @@
    "label": "Total"
   },
   {
-   "fieldname": "difference",
-   "fieldtype": "Float",
-   "label": "Difference"
+   "fieldname": "section_break_ynwx",
+   "fieldtype": "Section Break"
   },
   {
    "fieldname": "approvalrejection_remark",
@@ -328,91 +409,21 @@
    "label": "Approval/Rejection Remark"
   },
   {
-   "fieldname": "column_break_fixf",
-   "fieldtype": "Column Break"
+   "fieldname": "custom_boe_no_details",
+   "fieldtype": "Link",
+   "label": "BOE No",
+   "options": "BOE",
+   "read_only": 1
   },
   {
-   "fieldname": "pickup_request",
-   "fieldtype": "Table MultiSelect",
-   "label": "Pickup Request",
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
    "no_copy": 1,
-   "options": "Pickup Request CT",
-   "print_hide": 1
-  },
-  {
-   "fieldname": "section_break_oepz",
-   "fieldtype": "Section Break"
-  },
-  {
-   "fieldname": "attach_document",
-   "fieldtype": "Table",
-   "label": "Attach Document",
-   "options": "Attach Document"
-  },
-  {
-   "default": "0",
-   "fieldname": "bill_of_entry_created",
-   "fieldtype": "Check",
-   "label": "Bill Of Entry Created",
-   "read_only": 1
-  },
-  {
-   "fieldname": "column_break_vcxy",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "section_break_ynwx",
-   "fieldtype": "Section Break"
-  },
-  {
-   "fieldname": "company",
-   "fieldtype": "Link",
-   "label": "Company",
-   "options": "Company"
-  },
-  {
-   "fieldname": "journal_entry",
-   "fieldtype": "Link",
-   "label": "Journal Entry",
-   "options": "Journal Entry",
-   "read_only": 1
-  },
-  {
-   "fieldname": "payment_type",
-   "fieldtype": "Select",
-   "label": "Payment Type",
-   "options": "\nCustom Duty Payment\nGeneral Payment\nOther Duty Payment"
-  },
-  {
-   "fieldname": "items",
-   "fieldtype": "Table",
-   "label": "Items",
-   "options": "Payment Requisition CT"
-  },
-  {
-   "fieldname": "payment_to",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "label": "Payment To",
-   "options": "Supplier",
-   "reqd": 1
-  },
-  {
-   "fieldname": "boe_number",
-   "fieldtype": "Data",
-   "label": "BOE Number",
-   "options": "BOE"
-  },
-  {
-   "fieldname": "aws",
-   "fieldtype": "Data",
-   "label": "AWS"
-  },
-  {
-   "fieldname": "boe_details",
-   "fieldtype": "Link",
-   "label": "BOE Details",
-   "options": "BOE"
+   "options": "Payment Requisition",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
   }
  ],
  "grid_page_length": 50,
@@ -424,7 +435,7 @@
    "link_fieldname": "custom_payment_requisition"
   }
  ],
- "modified": "2026-06-18 15:05:46.384408",
+ "modified": "2026-09-11 10:25:01.685993",
  "modified_by": "Administrator",
  "module": "Import",
  "name": "Payment Requisition",
