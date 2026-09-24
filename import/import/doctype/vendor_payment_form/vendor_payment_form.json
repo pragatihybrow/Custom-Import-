@@ -2,7 +2,7 @@
  "actions": [],
  "allow_rename": 1,
  "autoname": "format:VPF-{YY}-{#####}",
- "creation": "2026-09-11 12:39:26.698189",
+ "creation": "2026-09-23 15:21:09.787486",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
@@ -15,6 +15,7 @@
   "boe_no",
   "awb",
   "attachment",
+  "amended_from",
   "amended_from"
  ],
  "fields": [
@@ -73,13 +74,23 @@
    "print_hide": 1,
    "read_only": 1,
    "search_index": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Vendor Payment Form",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-09-11 12:41:17.813785",
+ "modified": "2026-09-23 15:21:09.787486",
  "modified_by": "Administrator",
  "module": "Import",
  "name": "Vendor Payment Form",

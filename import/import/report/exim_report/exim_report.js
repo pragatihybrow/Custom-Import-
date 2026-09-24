@@ -1,9 +1,6 @@
 // Copyright (c) 2026, Pragati Dike and contributors
 // For license information, please see license.txt
 
-// Copyright (c) 2026, Pragati Dike and contributors
-// For license information, please see license.txt
-
 frappe.query_reports["Exim Report"] = {
 	"filters": [
 		{
