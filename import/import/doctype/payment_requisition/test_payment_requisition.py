@@ -1,4 +1,4 @@
-# Copyright (c) 2025, Pragati Dike and Contributors
+# Copyright (c) 2026, Pragati Dike and Contributors
 # See license.txt
 
 # import frappe
