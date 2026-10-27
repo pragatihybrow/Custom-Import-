@@ -1,17 +1,16 @@
 # Copyright (c) 2025, Pragati Dike and contributors
 # For license information, please see license.txt
 
-import frappe
-from frappe.model.document import Document
-from frappe.utils.pdf import get_pdf
-from frappe import _
-from frappe.model.mapper import get_mapped_doc
-from frappe.utils import nowdate
 import json
-from frappe.utils import flt
-from frappe.utils import money_in_words
+
+import frappe
+from frappe import _
+from frappe.model.document import Document
+from frappe.model.mapper import get_mapped_doc
+from frappe.utils import flt, get_url, money_in_words, nowdate
+from frappe.utils.pdf import get_pdf
 from erpnext.controllers.buying_controller import BuyingController
-from frappe.utils import get_url
+
 
 class PickupRequest(Document):
     def before_cancel(self):
@@ -22,7 +21,7 @@ class PickupRequest(Document):
                         DELETE FROM `tabPickup Request CT`
                         WHERE parent = %s AND pickup_request = %s
                     """, (po_row.purchase_order, self.name))
-                    
+
                     # Update parent doctype field
                     frappe.db.set_value(
                         'Purchase Order',
@@ -31,23 +30,21 @@ class PickupRequest(Document):
                         'Pending',
                         update_modified=False
                     )
-                    
+
                     # Update child table field - set custom_pick_qty to 0 for all items
                     frappe.db.sql("""
                         UPDATE `tabPurchase Order Item`
                         SET custom_pick_qty = 0
                         WHERE parent = %s
                     """, (po_row.purchase_order,))
-                    
-                    # frappe.msgprint(f"Removed linkage with Purchase Order {po_row.purchase_order}")
-                    
+
                 except Exception as e:
                     frappe.log_error(f"Error removing linkage: {str(e)}")
                     frappe.throw(f"Could not remove linkage with Purchase Order {po_row.purchase_order}")
-        
+
         # Commit the changes to break the circular reference
         frappe.db.commit()
-   
+
     def validate(self):
         self.set_missing_values()
         self.calculate_totals()
@@ -55,17 +52,13 @@ class PickupRequest(Document):
         if self.taxes_and_charges and not self.get("purchase_taxes_and_charges"):
             self.apply_taxes_and_charges_template()
         self.calculate_taxes_and_totals()
-        
+
     def before_save(self):
         self.calculate_taxes_and_totals()
 
-        
     def before_submit(self):
         if not self.fop and (not self.get("po_no") or len(self.po_no) == 0):
             frappe.throw(_("Please add at least one Purchase Order before submitting, or check the FOP field."))
-
-    
-
 
     def set_missing_values(self):
         # ------------------------
@@ -120,7 +113,7 @@ class PickupRequest(Document):
                 rate = flt(item.get("rate", 0), 2)
                 currency_rate = flt(item.get("currency_rate", 1), 2) or 1.0
 
-                # Always recalculate from pick_qty × rate × currency_rate
+                # Always recalculate from pick_qty x rate x currency_rate
                 amount = flt(pick_qty * rate, 2)
                 amount_in_inr = flt(amount * currency_rate, 2)
 
@@ -137,37 +130,36 @@ class PickupRequest(Document):
 
     def set_grand_total(self):
         """Set grand total fields"""
-        # ✅ FIX: Use total_amount with proper precision, not rounded to integer
         base_net_total = flt(self.total_amount, 2)
-        
+
         # Set base_total
         self.base_total = base_net_total
-        
+
         # Calculate base grand total with taxes
         base_grand_total_calculated = flt(
             self.base_total + flt(self.base_total_taxes_and_charges, 2),
             2
         )
-        
+
         # Add rounding adjustment if present
         if self.get('base_rounding_adjustment'):
             base_grand_total_calculated += flt(self.base_rounding_adjustment, 2)
-        
+
         self.base_grand_total = base_grand_total_calculated
-        
+
         # Calculate grand total in currency
         conversion_rate = flt(self.get('conversion_rate', 1), 2)
         self.total = flt(self.base_total / conversion_rate, 2)
-        
+
         grand_total_calculated = flt(
             self.total + flt(self.taxes_and_charges_added, 2),
             2
         )
-        
+
         # Add rounding adjustment if present
         if self.get('rounding_adjustment'):
             grand_total_calculated += flt(self.rounding_adjustment, 2)
-        
+
         self.grand_total = grand_total_calculated
 
     @frappe.whitelist()
@@ -176,32 +168,32 @@ class PickupRequest(Document):
         # Ensure conversion_rate is set
         if not self.get('conversion_rate'):
             self.conversion_rate = 1.0
-            
+
         if not self.get("purchase_taxes_and_charges"):
             self.base_total_taxes_and_charges = 0
             self.total_taxes_and_charges = 0
             self.set_grand_total()
             return
-            
+
         # Initialize totals
         self.base_total_taxes_and_charges = 0
         self.total_taxes_and_charges = 0
-        
+
         # Get base net total
         base_net_total = flt(self.total_amount, 0)
-        
+
         if base_net_total == 0:
             self.base_total_taxes_and_charges = 0
             self.total_taxes_and_charges = 0
             self.set_grand_total()
             return
-        
+
         cumulative_total = base_net_total
-        
+
         for tax in self.get("purchase_taxes_and_charges"):
             # Ensure rate is a float
             tax_rate = flt(tax.get("rate", 0))
-            
+
             # Calculate tax amount based on charge type
             if tax.charge_type == "On Net Total":
                 tax.base_tax_amount = flt((base_net_total * tax_rate) / 100)
@@ -230,57 +222,51 @@ class PickupRequest(Document):
             else:
                 # Default: On Net Total
                 tax.base_tax_amount = flt((base_net_total * tax_rate) / 100)
-            
+
             # Apply add/deduct logic
             if tax.get("add_deduct_tax") == "Deduct":
                 tax.base_tax_amount = -1 * abs(flt(tax.base_tax_amount))
             else:
                 tax.base_tax_amount = abs(flt(tax.base_tax_amount))
-            
+
             # Handle currency conversion
             conversion_rate = flt(self.get('conversion_rate', 1), 1)
             tax.tax_amount = flt(tax.base_tax_amount / conversion_rate)
-            
+
             # Calculate running totals
             if tax.get("add_deduct_tax") == "Deduct":
                 cumulative_total -= abs(flt(tax.base_tax_amount))
             else:
                 cumulative_total += abs(flt(tax.base_tax_amount))
-            
+
             tax.base_total = flt(cumulative_total)
             tax.total = flt(tax.base_total / conversion_rate)
-            
+
             # Add to total taxes (always positive for display)
             if tax.get("add_deduct_tax") == "Deduct":
                 self.base_total_taxes_and_charges -= abs(flt(tax.base_tax_amount))
             else:
                 self.base_total_taxes_and_charges += abs(flt(tax.base_tax_amount))
-        
+
         # Set final total taxes
         conversion_rate = flt(self.get('conversion_rate', 1), 1)
         self.total_taxes_and_charges = flt(self.base_total_taxes_and_charges / conversion_rate)
-        
+
         # Set grand totals
         self.set_grand_total()
 
-    # def set_grand_total(self):
-    #     """Set grand total fields"""
-    #     base_net_total = flt(self.total_amount, 0)
-    #     self.base_grand_total = flt(base_net_total + self.base_total_taxes_and_charges)
-    #     self.grand_total = flt(self.total) + flt(self.taxes_and_charges_added)
-        
     @frappe.whitelist()
     def apply_taxes_and_charges_template(self):
         """Apply taxes and charges template"""
         if not self.taxes_and_charges:
             return
-            
+
         # Clear existing taxes
         self.purchase_taxes_and_charges = []
-        
+
         # Get template
         template = frappe.get_doc("Purchase Taxes and Charges Template", self.taxes_and_charges)
-        
+
         # Add taxes from template
         for tax in template.taxes:
             tax_row = {
@@ -297,7 +283,7 @@ class PickupRequest(Document):
                 "included_in_paid_amount": tax.included_in_paid_amount
             }
             self.append("purchase_taxes_and_charges", tax_row)
-        
+
         # Calculate taxes after adding
         self.calculate_taxes_and_totals()
 
@@ -318,17 +304,21 @@ class PickupRequest(Document):
                     },
                 )
 
+
+# ------------------------------------------------------------------------------
 # Utility methods that can be called from client side
+# ------------------------------------------------------------------------------
+
 @frappe.whitelist()
 def get_tax_template_taxes(template_name):
     """Get taxes from tax template"""
     if not template_name:
         return []
-    
+
     try:
         template = frappe.get_doc("Purchase Taxes and Charges Template", template_name)
         taxes = []
-        
+
         for tax in template.taxes:
             taxes.append({
                 "charge_type": tax.charge_type,
@@ -343,10 +333,11 @@ def get_tax_template_taxes(template_name):
                 "included_in_print_rate": tax.included_in_print_rate,
                 "included_in_paid_amount": tax.included_in_paid_amount
             })
-        
+
         return taxes
     except Exception as e:
         frappe.throw(_("Error fetching tax template: {0}").format(str(e)))
+
 
 @frappe.whitelist()
 def apply_tax_template_to_pickup_request(pickup_request_name, template_name):
@@ -366,12 +357,14 @@ def apply_tax_template_to_pickup_request(pickup_request_name, template_name):
     except Exception as e:
         frappe.throw(_("Error applying tax template: {0}").format(str(e)))
 
+
 @frappe.whitelist()
 def get_supplier_tax_category(supplier):
     """Get tax category from supplier"""
     if not supplier:
         return None
     return frappe.get_cached_value("Supplier", supplier, "tax_category")
+
 
 @frappe.whitelist()
 def get_company_tax_category(company):
@@ -380,23 +373,19 @@ def get_company_tax_category(company):
         return None
     return frappe.get_cached_value("Company", company, "tax_category")
 
+
 @frappe.whitelist()
 def get_items_details(parent, item_name):
     parent_data = frappe.db.sql(" select currency,conversion_rate from `tabPurchase Order` where name=%s ", (parent), as_dict=True)
     child_data = frappe.db.sql(" select rate from `tabPurchase Order Item` where parent=%s and item_code=%s ", (parent, item_name), as_dict=True)
     return parent_data, child_data
 
+
 @frappe.whitelist()
 def validate_po_order_qty_to_pickup_qty(po_no, item_code):
-    data = frappe.db.sql(" select received_qty, qty from `tabPurchase Order Item` where parent=%s and item_code=%s ",(po_no, item_code), as_dict=True)
+    data = frappe.db.sql(" select received_qty, qty from `tabPurchase Order Item` where parent=%s and item_code=%s ", (po_no, item_code), as_dict=True)
     return data
 
-# @frappe.whitelist()
-# def get_po_all_details(po_name):
-#     data = frappe.get_doc("Purchase Order", po_name)
-#     return data
-
-# import/import/doctype/pickup_request/pickup_request.py
 
 @frappe.whitelist()
 def get_po_all_details(po_name):
@@ -443,7 +432,8 @@ def attach_po_pdf_to_pickup_request(po_name, pickup_request_name, format_name="S
         "is_private": 1
     })
     file_doc.save(ignore_permissions=True)
-    return file_doc.name  
+    return file_doc.name
+
 
 @frappe.whitelist()
 def get_suppliers_dialog_data(pickup_request):
@@ -453,8 +443,11 @@ def get_suppliers_dialog_data(pickup_request):
     ]
 
 
+# ------------------------------------------------------------------------------
+# RFQ creation
+# ------------------------------------------------------------------------------
+
 @frappe.whitelist()
-# def create_rfq_from_pickup_request(pickup_request, suppliers, email_template, schedule_date=None):
 def create_rfq_from_pickup_request(
     pickup_request,
     suppliers,
@@ -463,12 +456,16 @@ def create_rfq_from_pickup_request(
     warehouse=None):
     if not suppliers:
         frappe.throw("Please add at least one supplier.")
-    
+
     suppliers = json.loads(suppliers)
     pickup = frappe.get_doc("Pickup Request", pickup_request)
     email_template_doc = frappe.get_doc("Email Template", email_template)
-    message_for_supplier = email_template_doc.response or ""
-    company_abbr = frappe.db.get_value("Company", pickup.company, "abbr")
+
+    # Use HTML ticked -> content lives in response_html, otherwise in response
+    if email_template_doc.get("use_html"):
+        message_for_supplier = email_template_doc.get("response_html") or ""
+    else:
+        message_for_supplier = email_template_doc.get("response") or ""
 
     # --------------------------------------------------------------------------
     # Create RFQ
@@ -481,7 +478,7 @@ def create_rfq_from_pickup_request(
     rfq.company = pickup.company
     rfq.custom_no_of_pkg_units = pickup.no_of_package
     rfq.custom_shipment_type = pickup.type_of_shipments
-    
+
     # Set schedule date
     if schedule_date:
         rfq.schedule_date = str(schedule_date) if not isinstance(schedule_date, str) else schedule_date
@@ -501,29 +498,22 @@ def create_rfq_from_pickup_request(
         })
 
     # --------------------------------------------------------------------------
-    # Add Items (warehouse fetched from PO in child table)
+    # Add Items (warehouse fetched from PO, or from dialog when FOP)
     # --------------------------------------------------------------------------
     for item in pickup.purchase_order_details:
         if pickup.fop:
             po_warehouse = warehouse
         else:
-            po_number = item.po_number
             po_warehouse = frappe.db.get_value(
                 "Purchase Order",
-                po_number,
+                item.po_number,
                 "set_warehouse"
             )
 
-        # # 1. Get PO number from child table
-        # po_number = item.po_number
-
-        # # 2. Fetch warehouse from PO's set_warehouse field
-        # po_warehouse = frappe.db.get_value("Purchase Order", po_number, "set_warehouse")
-
-        # 3. Load Item Doc to read stock UOM & uoms
+        # Load Item Doc to read stock UOM & uoms
         item_doc = frappe.get_doc("Item", item.item)
 
-        # 4. Get conversion factor
+        # Get conversion factor
         conversion_factor = 1
         if item_doc.uoms:
             for uom_row in item_doc.uoms:
@@ -531,34 +521,25 @@ def create_rfq_from_pickup_request(
                     conversion_factor = uom_row.conversion_factor
                     break
 
-        # 5. Append RFQ item
         rfq.append("items", {
             "item_code": item.item,
             "item_name": item.material,
             "description": item.material_desc,
             "qty": item.pick_qty,
             "schedule_date": rfq.schedule_date,
-            "warehouse": po_warehouse ,
+            "warehouse": po_warehouse,
             "uom": item_doc.stock_uom,
             "conversion_factor": conversion_factor
         })
 
     # --------------------------------------------------------------------------
     # Save & Submit RFQ
+    # The supplier email (with the Supplier Quotation web page link) is sent by
+    # the on_rfq_submit hook in rfq_events.py, so it is NOT sent from here.
     # --------------------------------------------------------------------------
     try:
         rfq.insert()
         rfq.submit()
-
-        try:
-            on_rfq_submit(rfq)
-        except Exception as e:
-            frappe.log_error(f"Failed to send RFQ emails: {str(e)}")
-            frappe.msgprint(
-                f"RFQ created successfully but failed to send emails: {str(e)}",
-                title="Email Warning", indicator="orange"
-            )
-
         return rfq.name
 
     except Exception as e:
@@ -566,7 +547,9 @@ def create_rfq_from_pickup_request(
         frappe.throw(f"Failed to create RFQ: {str(e)}")
 
 
-
+# ------------------------------------------------------------------------------
+# PO pickup qty / status updates
+# ------------------------------------------------------------------------------
 
 def update_po_pick_qty_and_status(pickup_request_name):
     pickup = frappe.get_doc("Pickup Request", pickup_request_name)
@@ -617,7 +600,7 @@ def update_po_pick_qty_and_status(pickup_request_name):
                 if pr.pickup_request == pickup.name:
                     existing_pickup_request = pr
                     break
-        
+
         # If not found, add new pickup request entry
         if not existing_pickup_request and hasattr(po, 'custom_pickup_request'):
             po.append('custom_pickup_request', {
@@ -628,17 +611,13 @@ def update_po_pick_qty_and_status(pickup_request_name):
 
     frappe.db.commit()
 
-# @frappe.whitelist()
-# def trigger_pickup_updates(pickup_request):
-#     pr_doc = frappe.get_doc("Pickup Request", pickup_request)
-#     po_updates = {} 
 
 @frappe.whitelist()
 def trigger_pickup_updates(pickup_request):
     pr_doc = frappe.get_doc("Pickup Request", pickup_request)
 
     if not pr_doc.po_no:
-        return  
+        return
 
     po_updates = {}
     for pr_item in pr_doc.purchase_order_details:
@@ -680,7 +659,7 @@ def trigger_pickup_updates(pickup_request):
     for po_name, po_doc in po_updates.items():
         po_doc.save(ignore_permissions=True)
 
-    # Step 2: Update pickup status on each linked PO
+    # Update pickup status on each linked PO
     for po_row in pr_doc.po_no:
         po_name = po_row.purchase_order
         po_doc = frappe.get_doc("Purchase Order", po_name)  # fresh fetch after save
@@ -705,7 +684,8 @@ def trigger_pickup_updates(pickup_request):
         po_doc.save(ignore_permissions=True)
 
     frappe.db.commit()
-    
+
+
 def get_dashboard_data(data):
     # Links for Pickup Request
     data["non_standard_fieldnames"]["Request for Quotation"] = "pickup_request"
@@ -718,6 +698,7 @@ def get_dashboard_data(data):
         }
     ]
     return data
+
 
 @frappe.whitelist()
 def get_dashboard_link_data(doctype, name, data=None):
@@ -736,10 +717,6 @@ def get_dashboard_link_data(doctype, name, data=None):
         }
     return {}
 
-# @frappe.whitelist()
-# def should_show_update_button(pickup_request):
-#     pickup = frappe.get_doc("Pickup Request", pickup_request)
-#     po_names = list(set([row.po_number for row in pickup.purchase_order_details if row.po_number]))
 
 @frappe.whitelist()
 def should_show_update_button(pickup_request):
@@ -752,47 +729,13 @@ def should_show_update_button(pickup_request):
         for item in po.items:
             custom_pick_qty = item.custom_pick_qty or 0
             if custom_pick_qty < item.qty:
-                return True 
-    return False  
+                return True
+    return False
 
 
-
-
-def on_rfq_submit(doc, method=None):
-    """
-    Send an email to each supplier on RFQ submit with a webform link pre-filled with RFQ and supplier.
-    """
-    base_url = get_url() 
-    webform_base_url = f"{base_url}/supplier-quotation/new"
-
-    for supplier_row in doc.suppliers:
-        supplier = supplier_row.supplier
-        email_id = supplier_row.email_id
-        if not email_id:
-            continue
-        # Build webform link
-        webform_link = f"{webform_base_url}?request_for_quotation={doc.name}&supplier={supplier}"
-        subject = f"Request for Quotation {doc.name} - Submit Your Quotation"
-        message = f"""
-        Dear Supplier,<br><br>
-        You are invited to submit your quotation for RFQ <b>{doc.name}</b>.<br>
-        Please use the following link to submit your quotation:<br><br>
-        <a href='{webform_link}' target='_blank'>Submit Quotation (Web Form)</a><br><br>
-        Thank you.<br>
-        """
-        frappe.sendmail(
-            recipients=[email_id],
-            subject=subject,
-            message=message,
-            reference_doctype=doc.doctype,
-            reference_name=doc.name,
-            now=True,
-        )
-
-
-import frappe
-from frappe import _
-from frappe.utils import get_url
+# ------------------------------------------------------------------------------
+# Workflow email
+# ------------------------------------------------------------------------------
 
 def on_workflow_state_change(doc, method):
     """
@@ -803,7 +746,7 @@ def on_workflow_state_change(doc, method):
     if doc.has_value_changed("workflow_state"):
         old_state = doc.get_doc_before_save().workflow_state if doc.get_doc_before_save() else None
         new_state = doc.workflow_state
-        
+
         if old_state == "Open" and new_state == "In Progress":
             send_email_to_exim_user(doc)
 
@@ -815,50 +758,50 @@ def send_email_to_exim_user(doc):
     try:
         # Get the EXIM user email from the custom field
         exim_user = doc.custom_exim_user
-        
+
         if not exim_user:
             frappe.log_error(
                 message=f"No EXIM user specified for Pickup Request {doc.name}",
                 title="Pickup Request Email Notification Error"
             )
             return
-        
+
         # Get the user's email address
         exim_user_email = frappe.db.get_value("User", exim_user, "email")
-        
+
         if not exim_user_email:
             frappe.log_error(
                 message=f"Email not found for user {exim_user}",
                 title="Pickup Request Email Notification Error"
             )
             return
-        
+
         # Generate document link
         doc_link = get_url(doc.get_url())
-        
+
         # Prepare email subject
         subject = _("Pickup Request {0} is now In Progress").format(doc.name)
-        
+
         # Prepare email message
         message = f"""
         <p>Dear {frappe.db.get_value("User", exim_user, "full_name") or exim_user},</p>
-        
+
         <p>The Pickup Request <strong>{doc.name}</strong> has been moved to <strong>In Progress</strong> status.</p>
-        
+
         <p><strong>Document Details:</strong></p>
         <ul>
             <li><strong>Pickup Request:</strong> {doc.name}</li>
             <li><strong>Status:</strong> In Progress</li>
             <li><strong>Created On:</strong> {doc.creation}</li>
         </ul>
-        
+
         <p>You can view the document by clicking the link below:</p>
         <p><a href="{doc_link}" style="background-color: #2490ef; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">View Pickup Request</a></p>
-        
+
         <p>Best regards,<br>
         {frappe.db.get_single_value("System Settings", "company") or "Your Company"}</p>
         """
-        
+
         # Send email
         frappe.sendmail(
             recipients=[exim_user_email],
@@ -868,13 +811,13 @@ def send_email_to_exim_user(doc):
             reference_name=doc.name,
             delayed=False
         )
-        
+
         frappe.msgprint(
             _("Email notification sent to {0}").format(exim_user_email),
             indicator="green",
             alert=True
         )
-        
+
     except Exception as e:
         frappe.log_error(
             message=frappe.get_traceback(),
@@ -892,6 +835,9 @@ def send_email_on_workflow_action(doc, method):
     send_email_to_exim_user(doc)
 
 
+# ------------------------------------------------------------------------------
+# Purchase Receipt from Pickup Request
+# ------------------------------------------------------------------------------
 
 @frappe.whitelist()
 def make_purchase_receipt_from_pickup(pickup_request):
@@ -908,9 +854,6 @@ def make_purchase_receipt_from_pickup(pickup_request):
             key = (d.po_number, d.item)
             plain_pick_map[key] = d.pick_qty or 0
 
-    # po_names = [row.purchase_order for row in pck.po_no]
-    # if not po_names:
-    #     frappe.throw("No Purchase Orders linked to this Pickup Request")
     po_names = [row.purchase_order for row in pck.po_no]
     if not po_names:
         if pck.fop:

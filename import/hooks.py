@@ -274,9 +274,9 @@ doc_events = {
     "BOE": {
         "on_submit": "import.config.py.bill_of_entry.update_payment_request"
     },
-    "Request for Quotation": {
-        "on_submit": "import.config.py.rfq.on_rfq_submit"
-    },
+    # "Request for Quotation": {
+    #     "on_submit": "import.config.py.rfq.on_rfq_submit"
+    # },
    
     "Supplier Quotation": {
         "before_save": "import.config.py.supplier_quotation.set_quotation_number"
