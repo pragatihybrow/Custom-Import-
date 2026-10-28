@@ -1,7 +1,7 @@
 import frappe
 from frappe.utils import get_url
 from frappe.utils import get_url_to_form, fmt_money
-
+from frappe import _
 
 @frappe.whitelist()
 def get_supplier_previously_data(item_code):
@@ -41,85 +41,80 @@ def get_supplier_previously_data(item_code):
     return result
 
 
-# def on_rfq_submit(doc, method=None):
-#     """
-#     Send an email to each supplier on RFQ submit with a webform link pre-filled with RFQ and supplier.
-#     """
-#     base_url = get_url() 
-#     webform_base_url = f"{base_url}/supplier-quotation/new"
+def get_exim_cc(pickup_request):
+    if not pickup_request:
+        return []
 
-#     for supplier_row in doc.suppliers:
-#         supplier = supplier_row.supplier
-#         email_id = supplier_row.email_id
-#         if not email_id:
-#             continue
-#         # Build webform link
-#         webform_link = f"{webform_base_url}?request_for_quotation={doc.name}&supplier={supplier}"
-#         subject = f"Request for Quotation {doc.name} - Submit Your Quotation"
-#         message = f"""
-#         Dear Supplier,<br><br>
-#         You are invited to submit your quotation for RFQ <b>{doc.name}</b>.<br>
-#         Please use the following link to submit your quotation:<br><br>
-#         <a href='{webform_link}' target='_blank'>Submit Quotation (Web Form)</a><br><br>
-#         Thank you.<br>
-#         """
-#         frappe.sendmail(
-#             recipients=[email_id],
-#             subject=subject,
-#             message=message,
-#             reference_doctype=doc.doctype,
-#             reference_name=doc.name,
-#             now=True,
-#         )
+    exim_user = frappe.db.get_value("Pickup Request", pickup_request, "exim_user")
+    if not exim_user:
+        return []
 
-# def on_rfq_submit(doc, method=None):
-#     pickup_request = None
-#     if doc.custom_pickup_request:
-#         pickup_request = frappe.get_doc("Pickup Request", doc.custom_pickup_request)
-    
-#     rfq_link = get_url_to_form(doc.doctype, doc.name)
+    email = frappe.db.get_value("User", exim_user, "email") or (
+        exim_user if "@" in exim_user else None
+    )
+    return [email] if email else []
 
 
-#     for supplier_row in doc.suppliers:
-#         supplier = supplier_row.supplier
-#         email_id = supplier_row.email_id
-#         if not email_id:
-#             continue
+def get_shipping_document_attachment(pickup_request):
+    if not pickup_request:
+        return []
 
-#         subject = f"Request for Quotation {doc.name} - Submit Your Quotation"
+    file_url = frappe.db.get_value("Pickup Request", pickup_request, "shipping_document")
+    if not file_url:
+        return []
+
+    try:
+        file_name = frappe.db.get_value("File", {"file_url": file_url}, "name")
+        if not file_name:
+            frappe.log_error(
+                message=f"File record not found for {file_url}",
+                title=f"RFQ email: shipping_document missing ({pickup_request})",
+            )
+            return []
+
+        file_doc = frappe.get_doc("File", file_name)
+        return [{"fname": file_doc.file_name, "fcontent": file_doc.get_content()}]
+    except Exception:
+        frappe.log_error(
+            message=frappe.get_traceback(),
+            title=f"RFQ email: could not attach shipping_document ({pickup_request})",
+        )
+        return []
 
 
-#         message = f"""
-#         <p>Dear {supplier},</p>
-#         <p>With reference to RFQ <b>{doc.name}</b>, you are invited to submit your quotation. 
-#         Please find below the shipment details for your reference.</p>
+def on_rfq_submit(doc, method=None):
+    if not doc.get("suppliers"):
+        return
 
-#         <table border="1" cellpadding="6" cellspacing="0"
-#             style="border-collapse:collapse; width:auto; font-family:Arial; font-size:13px;">
-#             <tr><td><b>Pickup Reference Number:</b></td><td>{pickup_request.name if pickup_request else ''}</td></tr>
-#             <tr><td><b>Origin Country:</b></td><td>{pickup_request.country_origin if pickup_request else ''}</td></tr>
-#             <tr><td><b>Port of Loading (POL):</b></td><td>{pickup_request.port_of_loading_pol if pickup_request else ''}</td></tr>
-#             <tr><td><b>Port of Destination (POD):</b></td><td>{pickup_request.port_of_destination_pod if pickup_request else ''}</td></tr>
-#             <tr><td><b>Shipment Mode:</b></td><td>{pickup_request.type_of_shipments if pickup_request else ''}</td></tr>
-#             <tr><td><b>Expected Pickup Date:</b></td><td>{frappe.format(pickup_request.pickup_date_by, {'fieldtype': 'Date'}) if pickup_request and pickup_request.pickup_date_by else ''}</td></tr>
-#             <tr><td><b>Number of Packages:</b></td><td>{pickup_request.no_of_package if pickup_request else ''}</td></tr>
-#             <tr><td><b>Gross Weight:</b></td><td>{pickup_request.gross_weight if pickup_request else ''} Kg</td></tr>
-#             <tr><td><b>Dimensions (L*W*H):</b></td><td>{pickup_request.dimensions if pickup_request else ''}</td></tr>
-#             <tr><td><b>Product Category:</b></td><td>{pickup_request.type_of_cargo if pickup_request else ''}</td></tr>
-#             <tr><td><b>Shipment Value:</b></td><td>{frappe.utils.fmt_money(pickup_request.shipment_value, currency=pickup_request.currency) if pickup_request else ''}</td></tr>
-#             <tr><td><b>Incoterm:</b></td><td>{pickup_request.incoterm if pickup_request else ''}</td></tr>
-#         </table>
-#         <p><b>View RFQ Details:</b> <a href="{rfq_link}">{rfq_link}</a></p>
+    pickup_request = doc.get("custom_pickup_request")
 
-#         <br>
-#         <p>Thank you,<br>{frappe.session.user}</p>
-#         """
+    # Fetch once, reuse for every supplier
+    exim_cc = get_exim_cc(pickup_request)
+    attachments = get_shipping_document_attachment(pickup_request)
 
-#         frappe.sendmail(
-#             recipients=[email_id],
-#             subject=subject,
-#             message=message,
-#             reference_doctype=doc.doctype,
-#             reference_name=doc.name,
-#             now=True,
-#         )
+    message = frappe.render_template(doc.message_for_supplier or "", doc.as_dict())
+    subject = _("Request for Quotation {0}").format(doc.name)
+
+    for row in doc.suppliers:
+        if not row.email_id:
+            continue
+
+        # don't CC someone who is already the recipient
+        cc = [c for c in exim_cc if c.lower() != row.email_id.lower()]
+
+        try:
+            frappe.sendmail(
+                recipients=[row.email_id],
+                cc=cc,
+                subject=subject,
+                message=message,
+                attachments=attachments,
+                reference_doctype="Request for Quotation",
+                reference_name=doc.name,
+                delayed=False,
+            )
+        except Exception:
+            frappe.log_error(
+                message=frappe.get_traceback(),
+                title=f"RFQ email failed: {doc.name} / {row.email_id}",
+            )
